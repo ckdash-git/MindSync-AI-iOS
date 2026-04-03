@@ -43,5 +43,10 @@ final class DependencyContainer {
         return ChatViewModel(sendMessageUseCase: sendMessageUseCase)
     }
 
+    func makeCouncilViewModel() -> CouncilViewModel {
+        let useCase = SendCouncilMessageUseCase(chatRepository: chatRepository)
+        return CouncilViewModel(useCase: useCase)
+    }
+
     private init() {}
 }
