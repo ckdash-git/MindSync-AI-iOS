@@ -67,7 +67,8 @@ final class CouncilViewModel: ObservableObject {
             // user-initiated — no error shown
         } catch {
             if let i = responses.firstIndex(where: { $0.model.id == model.id }) {
-                responses[i].error = "Something went wrong. Please try again."
+                let message = (error as? AppError)?.errorDescription ?? error.localizedDescription
+                responses[i].error = message
             }
             logError("Council streaming error [\(model.name)]: \(error.localizedDescription)")
         }

@@ -32,10 +32,19 @@ struct CouncilView: View {
                     .foregroundStyle(Color.secondaryText)
             }
             Spacer()
+            if viewModel.isStreaming {
+                Button(action: viewModel.cancel) {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(Color.red)
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(Color.surfaceBackground)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isStreaming)
     }
 
     // MARK: - Content
