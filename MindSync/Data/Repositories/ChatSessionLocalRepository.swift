@@ -1,6 +1,6 @@
 import Foundation
 
-final class ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
+actor ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
 
     private let baseURL: URL
     private let decoder = JSONDecoder()
@@ -14,8 +14,17 @@ final class ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
             appropriateFor: nil,
             create: true
         )) ?? fm.temporaryDirectory
-        baseURL = appSupport.appendingPathComponent("ChatSessions", isDirectory: true)
-        try? fm.createDirectory(at: baseURL, withIntermediateDirectories: true)
+
+        let preferred = appSupport.appendingPathComponent("ChatSessions", isDirectory: true)
+        do {
+            try fm.createDirectory(at: preferred, withIntermediateDirectories: true)
+            baseURL = preferred
+        } catch {
+            let fallback = fm.temporaryDirectory.appendingPathComponent("ChatSessions", isDirectory: true)
+            try? fm.createDirectory(at: fallback, withIntermediateDirectories: true)
+            baseURL = fallback
+            logError("ChatSessions directory creation failed, using temp fallback: \(error.localizedDescription)")
+        }
     }
 
     func save(_ session: ChatSession) async throws {
@@ -36,7 +45,15 @@ final class ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
         let files = try fm.contentsOfDirectory(at: baseURL, includingPropertiesForKeys: nil)
         return files
             .filter { $0.pathExtension == "json" }
-            .compactMap { try? decoder.decode(ChatSession.self, from: Data(contentsOf: $0)) }
+            .compactMap { fileURL -> ChatSession? in
+                do {
+                    let data = try Data(contentsOf: fileURL)
+                    return try decoder.decode(ChatSession.self, from: data)
+                } catch {
+                    logError("Failed to decode session at \(fileURL.lastPathComponent): \(error.localizedDescription)")
+                    return nil
+                }
+            }
             .sorted { $0.updatedAt > $1.updatedAt }
     }
 

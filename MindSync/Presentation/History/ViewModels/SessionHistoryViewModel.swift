@@ -15,16 +15,23 @@ final class SessionHistoryViewModel: ObservableObject {
     func loadSessions() async {
         isLoading = true
         defer { isLoading = false }
+        let repo = sessionRepository
         do {
-            sessions = try await sessionRepository.loadAll()
+            let loaded = try await Task.detached(priority: .userInitiated) {
+                try await repo.loadAll()
+            }.value
+            sessions = loaded
         } catch {
             logError("SessionHistory load failed: \(error.localizedDescription)")
         }
     }
 
     func delete(id: UUID) async {
+        let repo = sessionRepository
         do {
-            try await sessionRepository.delete(id: id)
+            try await Task.detached(priority: .userInitiated) {
+                try await repo.delete(id: id)
+            }.value
             sessions.removeAll { $0.id == id }
         } catch {
             logError("SessionHistory delete failed: \(error.localizedDescription)")

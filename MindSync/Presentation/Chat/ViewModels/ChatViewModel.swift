@@ -8,7 +8,9 @@ final class ChatViewModel: ObservableObject {
     @Published private(set) var isStreaming: Bool = false
     @Published private(set) var errorMessage: String?
     @Published var inputText: String = ""
-    @Published var selectedModel: AIModel = .gpt4o
+    @Published var selectedModel: AIModel = .gpt4o {
+        didSet { session.selectedModel = selectedModel }
+    }
 
     private let sendMessageUseCase: SendMessageUseCaseProtocol
     private let sessionRepository: ChatSessionRepositoryProtocol
@@ -112,9 +114,10 @@ final class ChatViewModel: ObservableObject {
 
     private func persistSession() {
         let snapshot = session
-        Task {
+        let repo = sessionRepository
+        Task.detached(priority: .utility) {
             do {
-                try await sessionRepository.save(snapshot)
+                try await repo.save(snapshot)
             } catch {
                 logError("Session persist failed: \(error.localizedDescription)")
             }

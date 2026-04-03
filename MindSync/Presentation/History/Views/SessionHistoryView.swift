@@ -45,9 +45,10 @@ struct SessionHistoryView: View {
                 .listRowBackground(Color.cardBackground)
             }
             .onDelete { indexSet in
+                let idsToDelete = indexSet.map { viewModel.sessions[$0].id }
                 Task {
-                    for index in indexSet {
-                        await viewModel.delete(id: viewModel.sessions[index].id)
+                    for id in idsToDelete {
+                        await viewModel.delete(id: id)
                     }
                 }
             }
