@@ -57,7 +57,7 @@ final class KeychainManager: KeychainManagerProtocol {
 
         guard status == errSecSuccess, let data = item as? Data else {
             if status == errSecItemNotFound {
-                throw AppError.missingAPIKey(provider: key)
+                throw AppError.keychainFailed(operation: "not-found")
             }
             logError("Keychain retrieve failed: \(status)")
             throw AppError.keychainFailed(operation: "retrieve")

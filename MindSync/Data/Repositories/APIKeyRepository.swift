@@ -13,7 +13,11 @@ final class APIKeyRepository: APIKeyRepositoryProtocol {
     }
 
     func getKey(for provider: AIProvider) throws -> String {
-        try keychainManager.retrieve(for: provider.keychainAccount)
+        do {
+            return try keychainManager.retrieve(for: provider.keychainAccount)
+        } catch AppError.keychainFailed(operation: "not-found") {
+            throw AppError.missingAPIKey(provider: provider.displayName)
+        }
     }
 
     func deleteKey(for provider: AIProvider) throws {

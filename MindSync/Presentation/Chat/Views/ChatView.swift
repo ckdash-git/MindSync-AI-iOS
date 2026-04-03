@@ -75,11 +75,6 @@ struct ChatView: View {
                     }
                 }
             }
-            .onChange(of: viewModel.messages.last?.content) { _ in
-                if let lastID = viewModel.messages.last?.id {
-                    proxy.scrollTo(lastID, anchor: .bottom)
-                }
-            }
         }
     }
 

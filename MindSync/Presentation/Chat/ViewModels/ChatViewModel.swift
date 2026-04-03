@@ -60,6 +60,10 @@ final class ChatViewModel: ObservableObject {
                 messages[assistantIndex].isStreaming = false
                 session.messages.append(messages[assistantIndex])
 
+            } catch is CancellationError {
+                messages[assistantIndex].isStreaming = false
+                // Cancellation is user-initiated — no error banner needed.
+
             } catch {
                 messages[assistantIndex].isStreaming = false
                 messages[assistantIndex].content = "Something went wrong. Please try again."

@@ -47,7 +47,7 @@ final class NetworkManager: NetworkManagerProtocol {
 
     func stream(_ endpoint: APIEndpoint) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
-            Task {
+            let task = Task {
                 do {
                     var urlRequest = try endpoint.buildURLRequest()
                     urlRequest = try await self.interceptor.intercept(request: urlRequest)
@@ -78,6 +78,10 @@ final class NetworkManager: NetworkManagerProtocol {
                     logError("Stream error: \(error.localizedDescription)")
                     continuation.finish(throwing: NetworkError.map(from: error))
                 }
+            }
+
+            continuation.onTermination = { _ in
+                task.cancel()
             }
         }
     }
