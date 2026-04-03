@@ -10,6 +10,11 @@ extension Color {
 
     static let userBubble = Color("UserBubble", bundle: nil)
     static let assistantBubble = Color("AssistantBubble", bundle: nil)
+
+    // Provider accent colors — used in model selector row icons
+    static let openAIAccent = Color(hex: "10A37F")
+    static let anthropicAccent = Color(hex: "CC785C")
+    static let geminiAccent = Color(hex: "4285F4")
 }
 
 extension Color {
