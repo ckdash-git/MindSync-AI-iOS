@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct MindSyncApp: App {
+
+    private let container = DependencyContainer.shared
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ChatView(viewModel: container.makeChatViewModel())
         }
     }
 }
