@@ -16,4 +16,13 @@ extension View {
     func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
+
+    @ViewBuilder
+    func onValueChange<T: Equatable>(of value: T, perform action: @escaping () -> Void) -> some View {
+        if #available(iOS 17.0, *) {
+            self.onChange(of: value) { _, _ in action() }
+        } else {
+            self.onChange(of: value) { _ in action() }
+        }
+    }
 }

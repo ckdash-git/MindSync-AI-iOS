@@ -43,18 +43,18 @@ actor ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
     func loadAll() async throws -> [ChatSession] {
         let fm = FileManager.default
         let files = try fm.contentsOfDirectory(at: baseURL, includingPropertiesForKeys: nil)
-        return files
-            .filter { $0.pathExtension == "json" }
-            .compactMap { fileURL -> ChatSession? in
-                do {
-                    let data = try Data(contentsOf: fileURL)
-                    return try decoder.decode(ChatSession.self, from: data)
-                } catch {
-                    logError("Failed to decode session at \(fileURL.lastPathComponent): \(error.localizedDescription)")
-                    return nil
-                }
+        var sessions: [ChatSession] = []
+        for fileURL in files where fileURL.pathExtension == "json" {
+            do {
+                let data = try Data(contentsOf: fileURL)
+                sessions.append(try decoder.decode(ChatSession.self, from: data))
+            } catch {
+                let name = fileURL.lastPathComponent
+                let desc = error.localizedDescription
+                await MainActor.run { logError("Failed to decode session at \(name): \(desc)") }
             }
-            .sorted { $0.updatedAt > $1.updatedAt }
+        }
+        return sessions.sorted { $0.updatedAt > $1.updatedAt }
     }
 
     func delete(id: UUID) async throws {

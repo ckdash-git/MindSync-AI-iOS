@@ -79,7 +79,7 @@ struct ChatView: View {
                 }
                 .padding(.vertical, 12)
             }
-            .onChange(of: viewModel.messages.count) { _ in
+            .onValueChange(of: viewModel.messages.count) {
                 if let lastID = viewModel.messages.last?.id {
                     withAnimation {
                         proxy.scrollTo(lastID, anchor: .bottom)
@@ -114,7 +114,8 @@ struct ChatView: View {
                     Button(action: viewModel.sendMessage) {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.system(size: 32))
-                            .foregroundStyle(viewModel.inputText.isEmpty ? .tertiary : Color.accentBrand)
+                            .foregroundStyle(Color.accentBrand)
+                            .opacity(viewModel.inputText.isEmpty ? 0.3 : 1.0)
                     }
                     .disabled(viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
