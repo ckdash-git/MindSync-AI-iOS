@@ -15,6 +15,14 @@ struct ContentView: View {
                 .tabItem {
                     Label("Council", systemImage: "rectangle.3.group")
                 }
+
+            SessionHistoryView(
+                viewModel: container.makeSessionHistoryViewModel(),
+                makeChatViewModel: container.makeChatViewModel(session:)
+            )
+            .tabItem {
+                Label("History", systemImage: "clock.arrow.circlepath")
+            }
         }
         .tint(Color.accentBrand)
     }
