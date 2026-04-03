@@ -3,6 +3,7 @@ import SwiftUI
 struct ChatView: View {
 
     @StateObject private var viewModel: ChatViewModel
+    @State private var showModelSelector = false
 
     init(viewModel: ChatViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -23,6 +24,10 @@ struct ChatView: View {
         }
         .background(Color.surfaceBackground)
         .animation(.easeInOut(duration: AppConstants.UI.animationDuration), value: viewModel.errorMessage)
+        .sheet(isPresented: $showModelSelector) {
+            ModelSelectorView(selectedModel: $viewModel.selectedModel)
+                .presentationDetents([.medium])
+        }
     }
 
     private var chatHeader: some View {
@@ -31,9 +36,15 @@ struct ChatView: View {
                 Text("MindSync AI")
                     .font(.headline)
                     .fontWeight(.semibold)
-                Text(viewModel.selectedModel.name)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Button(action: { showModelSelector = true }) {
+                    HStack(spacing: 3) {
+                        Text(viewModel.selectedModel.name)
+                            .font(.caption)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 9, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.accentBrand)
+                }
             }
             Spacer()
             Button(action: viewModel.clearChat) {
