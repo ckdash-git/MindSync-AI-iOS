@@ -22,7 +22,7 @@ final class GeminiChatRepository: ChatRepositoryProtocol {
             let task = Task {
                 do {
                     let apiKey = try apiKeyRepository.getKey(for: .gemini)
-                    let (systemInstruction, contents) = buildContents(from: session)
+                    let (systemInstruction, contents) = buildContents(from: session, newMessage: message)
                     let requestBody = GeminiChatRequestDTO(
                         contents: contents,
                         systemInstruction: systemInstruction
@@ -71,18 +71,24 @@ final class GeminiChatRepository: ChatRepositoryProtocol {
     /// Gemini roles are "user" or "model" (not "assistant").
     /// System content is extracted into a separate systemInstruction field.
     private func buildContents(
-        from session: ChatSession
+        from session: ChatSession,
+        newMessage: ChatMessage
     ) -> (systemInstruction: GeminiChatRequestDTO.Content?, contents: [GeminiChatRequestDTO.Content]) {
-        let recent = session.messages
-            .suffix(AppConstants.Chat.maxHistoryCount)
-            .filter { !$0.isStreaming }
+        let history = Array(
+            session.messages
+                .suffix(AppConstants.Chat.maxHistoryCount)
+                .filter { !$0.isStreaming }
+        )
+        let allMessages = history.contains(where: { $0.id == newMessage.id })
+            ? history
+            : history + [newMessage]
 
-        let systemText = recent
+        let systemText = allMessages
             .filter { $0.role == .system }
             .map(\.content)
             .joined(separator: "\n")
 
-        let contents = recent
+        let contents = allMessages
             .filter { $0.role != .system }
             .map { msg -> GeminiChatRequestDTO.Content in
                 let geminiRole = msg.role == .assistant ? "model" : "user"

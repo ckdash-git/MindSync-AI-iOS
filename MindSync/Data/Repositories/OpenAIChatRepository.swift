@@ -22,7 +22,7 @@ final class OpenAIChatRepository: ChatRepositoryProtocol {
             let task = Task {
                 do {
                     let apiKey = try apiKeyRepository.getKey(for: .openAI)
-                    let dtoMessages = buildMessages(from: session)
+                    let dtoMessages = buildMessages(from: session, newMessage: message)
                     let requestBody = OpenAIChatRequestDTO(
                         model: model.id,
                         messages: dtoMessages,
@@ -65,10 +65,16 @@ final class OpenAIChatRepository: ChatRepositoryProtocol {
 
     // MARK: - Private
 
-    private func buildMessages(from session: ChatSession) -> [OpenAIChatRequestDTO.Message] {
-        session.messages
-            .suffix(AppConstants.Chat.maxHistoryCount)
-            .filter { !$0.isStreaming }
-            .map { OpenAIChatRequestDTO.Message(role: $0.role.rawValue, content: $0.content) }
+    private func buildMessages(from session: ChatSession, newMessage: ChatMessage) -> [OpenAIChatRequestDTO.Message] {
+        let history = Array(
+            session.messages
+                .suffix(AppConstants.Chat.maxHistoryCount)
+                .filter { !$0.isStreaming }
+        )
+        // Append the new message only if it isn't already part of the session history.
+        let allMessages = history.contains(where: { $0.id == newMessage.id })
+            ? history
+            : history + [newMessage]
+        return allMessages.map { OpenAIChatRequestDTO.Message(role: $0.role.rawValue, content: $0.content) }
     }
 }

@@ -29,7 +29,7 @@ final class ChatViewModel: ObservableObject {
         let userMessage = ChatMessage(role: .user, content: content)
         messages.append(userMessage)
 
-        var assistantMessage = ChatMessage(
+        let assistantMessage = ChatMessage(
             role: .assistant,
             content: "",
             provider: selectedModel.provider,
@@ -38,7 +38,7 @@ final class ChatViewModel: ObservableObject {
         )
         messages.append(assistantMessage)
 
-        let assistantIndex = messages.count - 1
+        let assistantID = assistantMessage.id   // capture UUID, not fragile array index
         isStreaming = true
 
         session.messages.append(userMessage)
@@ -52,19 +52,26 @@ final class ChatViewModel: ObservableObject {
                 )
 
                 for try await delta in stream {
-                    messages[assistantIndex].content += delta
+                    guard let idx = messages.firstIndex(where: { $0.id == assistantID }) else { break }
+                    messages[idx].content += delta
                 }
 
-                messages[assistantIndex].isStreaming = false
-                session.messages.append(messages[assistantIndex])
+                if let idx = messages.firstIndex(where: { $0.id == assistantID }) {
+                    messages[idx].isStreaming = false
+                    session.messages.append(messages[idx])
+                }
 
             } catch is CancellationError {
-                messages[assistantIndex].isStreaming = false
+                if let idx = messages.firstIndex(where: { $0.id == assistantID }) {
+                    messages[idx].isStreaming = false
+                }
                 // Cancellation is user-initiated — no error banner needed.
 
             } catch {
-                messages[assistantIndex].isStreaming = false
-                messages[assistantIndex].content = "Something went wrong. Please try again."
+                if let idx = messages.firstIndex(where: { $0.id == assistantID }) {
+                    messages[idx].isStreaming = false
+                    messages[idx].content = "Something went wrong. Please try again."
+                }
                 showError(from: error)
                 logError("Chat streaming error: \(error.localizedDescription)")
             }

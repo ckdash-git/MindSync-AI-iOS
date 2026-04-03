@@ -22,7 +22,7 @@ final class AnthropicChatRepository: ChatRepositoryProtocol {
             let task = Task {
                 do {
                     let apiKey = try apiKeyRepository.getKey(for: .anthropic)
-                    let (systemPrompt, dtoMessages) = buildMessages(from: session)
+                    let (systemPrompt, dtoMessages) = buildMessages(from: session, newMessage: message)
                     let requestBody = AnthropicChatRequestDTO(
                         model: model.id,
                         messages: dtoMessages,
@@ -69,18 +69,24 @@ final class AnthropicChatRepository: ChatRepositoryProtocol {
     /// Returns (systemPrompt, messages).
     /// Anthropic requires system content at the top level — not inside the messages array.
     private func buildMessages(
-        from session: ChatSession
+        from session: ChatSession,
+        newMessage: ChatMessage
     ) -> (systemPrompt: String?, messages: [AnthropicChatRequestDTO.Message]) {
-        let recent = session.messages
-            .suffix(AppConstants.Chat.maxHistoryCount)
-            .filter { !$0.isStreaming }
+        let history = Array(
+            session.messages
+                .suffix(AppConstants.Chat.maxHistoryCount)
+                .filter { !$0.isStreaming }
+        )
+        let allMessages = history.contains(where: { $0.id == newMessage.id })
+            ? history
+            : history + [newMessage]
 
-        let systemContent = recent
+        let systemContent = allMessages
             .filter { $0.role == .system }
             .map(\.content)
             .joined(separator: "\n")
 
-        let conversationMessages = recent
+        let conversationMessages = allMessages
             .filter { $0.role != .system }
             .map { AnthropicChatRequestDTO.Message(role: $0.role.rawValue, content: $0.content) }
 
