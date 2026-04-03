@@ -1,24 +1,21 @@
-//
-//  ContentView.swift
-//  MindSync
-//
-//  Created by CHANDAN on 03/04/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
 
-#Preview {
-    ContentView()
+    private let container = DependencyContainer.shared
+
+    var body: some View {
+        TabView {
+            ChatView(viewModel: container.makeChatViewModel())
+                .tabItem {
+                    Label("Chat", systemImage: "bubble.left.and.bubble.right")
+                }
+
+            CouncilView(viewModel: container.makeCouncilViewModel())
+                .tabItem {
+                    Label("Council", systemImage: "rectangle.3.group")
+                }
+        }
+        .tint(Color.accentBrand)
+    }
 }
