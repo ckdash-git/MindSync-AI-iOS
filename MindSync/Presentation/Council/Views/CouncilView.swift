@@ -26,18 +26,12 @@ struct CouncilView: View {
                 Text("AI Council")
                     .font(.headline)
                     .fontWeight(.semibold)
+                    .foregroundStyle(Color.primaryText)
                 Text("Compare all models side by side")
                     .font(.caption)
                     .foregroundStyle(Color.secondaryText)
             }
             Spacer()
-            if viewModel.isStreaming {
-                Button(action: viewModel.cancel) {
-                    Image(systemName: "stop.circle")
-                        .font(.body)
-                        .foregroundStyle(.red)
-                }
-            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -54,7 +48,7 @@ struct CouncilView: View {
                     subtitle: "Send one prompt and compare GPT-4o, Claude, and Gemini side by side.",
                     systemImage: "rectangle.3.group"
                 )
-                .frame(height: 300)
+                .padding(.top, 60)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
                     promptBubble
@@ -73,11 +67,11 @@ struct CouncilView: View {
             Spacer(minLength: 60)
             Text(viewModel.prompt)
                 .font(.body)
-                .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(Color.accentBrand)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: AppConstants.UI.messageBubbleCornerRadius))
         }
         .padding(.horizontal, 16)
     }
@@ -86,34 +80,36 @@ struct CouncilView: View {
 
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 10) {
-            TextField("Ask all models\u{2026}", text: $viewModel.inputText, axis: .vertical)
+            TextField("Ask all models…", text: $viewModel.inputText, axis: .vertical)
                 .lineLimit(1...5)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(Color.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .onSubmit {
-                    if !viewModel.isStreaming {
-                        viewModel.send()
-                    }
-                }
 
-            Button(action: viewModel.send) {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(
-                        viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                            ? AnyShapeStyle(.tertiary)
-                            : AnyShapeStyle(Color.accentBrand)
-                    )
-            }
-            .disabled(
-                viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                || viewModel.isStreaming
-            )
+            actionButton
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color.surfaceBackground)
+    }
+
+    private var actionButton: some View {
+        Button {
+            if viewModel.isStreaming {
+                viewModel.cancel()
+            } else {
+                viewModel.send()
+            }
+        } label: {
+            Image(systemName: viewModel.isStreaming ? "stop.circle.fill" : "arrow.up.circle.fill")
+                .font(.system(size: 32))
+                .foregroundStyle(
+                    viewModel.isStreaming
+                        ? Color.red
+                        : (viewModel.inputText.isEmpty ? Color.secondary : Color.accentBrand)
+                )
+        }
+        .disabled(!viewModel.isStreaming && viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 }
