@@ -10,6 +10,10 @@ enum AppConstants {
 
         static let defaultTimeoutInterval: TimeInterval = 60
         static let streamingTimeoutInterval: TimeInterval = 180
+
+        static let anthropicVersion = "2023-06-01"
+        static let anthropicDefaultMaxTokens = 4096
+        static let openAIDefaultMaxTokens = 4096
     }
 
     enum Keychain {

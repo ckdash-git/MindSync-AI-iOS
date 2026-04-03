@@ -17,6 +17,21 @@ final class DependencyContainer {
         keychainManager: keychainManager
     )
 
+    lazy var chatRepository: ChatRepositoryProtocol = ChatRepositoryRouter(
+        openAIRepository: OpenAIChatRepository(
+            networkManager: networkManager,
+            apiKeyRepository: apiKeyRepository
+        ),
+        anthropicRepository: AnthropicChatRepository(
+            networkManager: networkManager,
+            apiKeyRepository: apiKeyRepository
+        ),
+        geminiRepository: GeminiChatRepository(
+            networkManager: networkManager,
+            apiKeyRepository: apiKeyRepository
+        )
+    )
+
     // MARK: - Use Cases
     lazy var manageAPIKeyUseCase: ManageAPIKeyUseCaseProtocol = ManageAPIKeyUseCase(
         apiKeyRepository: apiKeyRepository
@@ -24,7 +39,6 @@ final class DependencyContainer {
 
     // MARK: - ViewModels
     func makeChatViewModel() -> ChatViewModel {
-        let chatRepository = StubChatRepository(networkManager: networkManager, apiKeyRepository: apiKeyRepository)
         let sendMessageUseCase = SendMessageUseCase(chatRepository: chatRepository)
         return ChatViewModel(sendMessageUseCase: sendMessageUseCase)
     }
