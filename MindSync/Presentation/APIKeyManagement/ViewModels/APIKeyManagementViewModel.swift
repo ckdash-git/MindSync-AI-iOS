@@ -53,6 +53,7 @@ final class APIKeyManagementViewModel: ObservableObject {
             try useCase.deleteKey(for: provider)
             providerStates[i].hasStoredKey = false
             providerStates[i].draftKey = ""
+            providerStates[i].isRevealed = false
             providerStates[i].feedback = nil
         } catch {
             providerStates[i].feedback = .error(error.localizedDescription)

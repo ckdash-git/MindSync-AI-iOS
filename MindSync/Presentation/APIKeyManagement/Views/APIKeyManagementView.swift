@@ -56,7 +56,7 @@ private struct ProviderKeyCard: View {
         .clipShape(RoundedRectangle(cornerRadius: AppConstants.UI.cornerRadius))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         .task(id: state.feedback) {
-            guard state.feedback == .saved else { return }
+            guard state.feedback != nil else { return }
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             onClearFeedback()
         }
@@ -115,6 +115,7 @@ private struct ProviderKeyCard: View {
                     SecureField(inputPlaceholder, text: $state.draftKey)
                 }
             }
+            .privacySensitive()
             .font(.system(.body, design: .monospaced))
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)
