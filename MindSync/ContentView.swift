@@ -23,6 +23,11 @@ struct ContentView: View {
             .tabItem {
                 Label("History", systemImage: "clock.arrow.circlepath")
             }
+
+            APIKeyManagementView(viewModel: container.makeAPIKeyManagementViewModel())
+                .tabItem {
+                    Label("API Keys", systemImage: "key.horizontal")
+                }
         }
         .tint(Color.accentBrand)
     }

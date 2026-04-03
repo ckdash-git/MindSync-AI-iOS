@@ -59,5 +59,9 @@ final class DependencyContainer {
         SessionHistoryViewModel(sessionRepository: sessionRepository)
     }
 
+    func makeAPIKeyManagementViewModel() -> APIKeyManagementViewModel {
+        APIKeyManagementViewModel(useCase: manageAPIKeyUseCase)
+    }
+
     private init() {}
 }
