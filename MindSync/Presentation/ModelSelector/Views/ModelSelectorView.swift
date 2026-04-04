@@ -85,7 +85,7 @@ private struct ModelRowView: View {
         case .openAI:    return .openAIAccent
         case .anthropic: return .anthropicAccent
         case .gemini:    return .geminiAccent
-        case .nvidia:    return .green
+        case .nvidia:    return .nvidiaAccent
         }
     }
 

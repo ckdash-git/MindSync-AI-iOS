@@ -29,7 +29,10 @@ final class ManageAPIKeyUseCase: ManageAPIKeyUseCaseProtocol {
         request.setValue("Bearer \(trimmed)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await URLSession.shared.data(for: request)
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AppError.custom(message: "Invalid API Key. Verification failed.")
+        }
+        guard httpResponse.statusCode == 200 else {
             throw AppError.custom(message: "Invalid API Key. Verification failed.")
         }
 

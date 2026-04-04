@@ -22,13 +22,15 @@ struct APIKeyManagementView: View {
                     
                     keyCard
                     
-                    Link(destination: URL(string: "https://openrouter.ai/keys")!) {
-                        HStack(spacing: 6) {
-                            Text("Get OpenRouter Key")
-                            Image(systemName: "arrow.up.right.square")
+                    if let openRouterURL = URL(string: "https://openrouter.ai/keys") {
+                        Link(destination: openRouterURL) {
+                            HStack(spacing: 6) {
+                                Text("Get OpenRouter Key")
+                                Image(systemName: "arrow.up.right.square")
+                            }
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Color.accentBrand)
                         }
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(Color.accentBrand)
                     }
                 }
                 .padding()

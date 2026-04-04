@@ -56,7 +56,7 @@ final class SpeechService: NSObject, ObservableObject, SpeechServiceProtocol {
 
     func startRecording() throws {
         guard !isRecording else { return }
-        guard ((recognizer?.isAvailable) != nil) else {
+        guard recognizer?.isAvailable == true else {
             throw SpeechRecordingError.recognizerUnavailable
         }
 
