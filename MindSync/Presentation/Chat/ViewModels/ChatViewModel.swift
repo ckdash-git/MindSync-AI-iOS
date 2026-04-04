@@ -11,23 +11,43 @@ final class ChatViewModel: ObservableObject {
     @Published var selectedModel: AIModel = .gpt4o {
         didSet { session.selectedModel = selectedModel }
     }
+    @Published var isTTSEnabled: Bool = false
+
+    // MARK: - Voice forwarding (backed by speechService)
+
+    var isRecording: Bool { speechService.isRecording }
+    var isSpeaking: Bool { speechService.isSpeaking }
+    var isSpeechAvailable: Bool { speechService.isAvailable }
+
+    // MARK: - Private
 
     private let sendMessageUseCase: SendMessageUseCaseProtocol
     private let sessionRepository: ChatSessionRepositoryProtocol
+    private let speechService: SpeechServiceProtocol
     private var streamingTask: Task<Void, Never>?
     private var session: ChatSession
+    private var cancellables = Set<AnyCancellable>()
 
     init(
         sendMessageUseCase: SendMessageUseCaseProtocol,
         sessionRepository: ChatSessionRepositoryProtocol,
+        speechService: SpeechServiceProtocol,
         session: ChatSession = ChatSession()
     ) {
         self.sendMessageUseCase = sendMessageUseCase
         self.sessionRepository = sessionRepository
+        self.speechService = speechService
         self.session = session
         self.messages = session.messages.filter { !$0.isStreaming }
         self.selectedModel = session.selectedModel
+
+        speechService.statePublisher
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
+
+    // MARK: - Chat
 
     func sendMessage() {
         let content = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -69,6 +89,9 @@ final class ChatViewModel: ObservableObject {
                 if let idx = messages.firstIndex(where: { $0.id == assistantID }) {
                     messages[idx].isStreaming = false
                     session.messages.append(messages[idx])
+                    if isTTSEnabled {
+                        speechService.speak(messages[idx].content)
+                    }
                 }
 
                 persistSession()
@@ -102,12 +125,49 @@ final class ChatViewModel: ObservableObject {
 
     func clearChat() {
         cancelStreaming()
+        speechService.stopSpeaking()
+        if speechService.isRecording {
+            speechService.stopRecording()
+        }
+        inputText = ""
         messages = []
         session = ChatSession(selectedModel: selectedModel)
     }
 
     func dismissError() {
         errorMessage = nil
+    }
+
+    // MARK: - Voice
+
+    func toggleRecording() {
+        if speechService.isRecording {
+            speechService.stopRecording()
+            inputText = speechService.transcript
+        } else {
+            Task {
+                if !speechService.isAvailable {
+                    let granted = await speechService.requestPermissions()
+                    guard granted else {
+                        errorMessage = "Microphone or speech recognition access is required. Enable it in Settings."
+                        return
+                    }
+                }
+                do {
+                    try speechService.startRecording()
+                } catch {
+                    errorMessage = error.localizedDescription
+                    logError("Recording start failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    func toggleTTS() {
+        if isSpeaking {
+            speechService.stopSpeaking()
+        }
+        isTTSEnabled.toggle()
     }
 
     // MARK: - Private

@@ -30,6 +30,8 @@ struct ChatView: View {
         }
     }
 
+    // MARK: - Header
+
     private var chatHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
@@ -47,6 +49,13 @@ struct ChatView: View {
                 }
             }
             Spacer()
+            Button(action: viewModel.toggleTTS) {
+                Image(systemName: viewModel.isTTSEnabled ? "speaker.wave.2.fill" : "speaker.slash")
+                    .font(.body)
+                    .foregroundStyle(viewModel.isTTSEnabled ? Color.accentBrand : Color.secondary)
+            }
+            .padding(.trailing, 8)
+            .disabled(viewModel.isStreaming)
             Button(action: viewModel.clearChat) {
                 Image(systemName: "square.and.pencil")
                     .font(.body)
@@ -57,6 +66,8 @@ struct ChatView: View {
         .padding(.vertical, 12)
         .background(Color.surfaceBackground)
     }
+
+    // MARK: - Message List
 
     private var messageList: some View {
         ScrollViewReader { proxy in
@@ -89,6 +100,8 @@ struct ChatView: View {
         }
     }
 
+    // MARK: - Input Bar
+
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 10) {
             TextField("Message", text: $viewModel.inputText, axis: .vertical)
@@ -102,6 +115,10 @@ struct ChatView: View {
                         viewModel.sendMessage()
                     }
                 }
+
+            if !viewModel.isStreaming {
+                micButton
+            }
 
             Group {
                 if viewModel.isStreaming {
@@ -125,5 +142,14 @@ struct ChatView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(Color.surfaceBackground)
+    }
+
+    private var micButton: some View {
+        Button(action: viewModel.toggleRecording) {
+            Image(systemName: viewModel.isRecording ? "mic.fill" : "mic")
+                .font(.system(size: 22))
+                .foregroundStyle(viewModel.isRecording ? Color.red : Color.secondary)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.isRecording)
+        }
     }
 }

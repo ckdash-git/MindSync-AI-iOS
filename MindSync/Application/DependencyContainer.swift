@@ -8,6 +8,7 @@ final class DependencyContainer {
 
     // MARK: - Core
     lazy var keychainManager: KeychainManagerProtocol = KeychainManager()
+    lazy var speechService: SpeechServiceProtocol = SpeechService()
 
     // MARK: - Network
     lazy var networkManager: NetworkManagerProtocol = NetworkManager()
@@ -46,6 +47,7 @@ final class DependencyContainer {
         return ChatViewModel(
             sendMessageUseCase: sendMessageUseCase,
             sessionRepository: sessionRepository,
+            speechService: speechService,
             session: session
         )
     }
