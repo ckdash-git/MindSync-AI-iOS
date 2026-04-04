@@ -51,7 +51,7 @@ actor ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
             } catch {
                 let name = fileURL.lastPathComponent
                 let desc = error.localizedDescription
-                await MainActor.run { logError("Failed to decode session at \(name): \(desc)") }
+                logError("Failed to decode session at \(name): \(desc)")
             }
         }
         return sessions.sorted { $0.updatedAt > $1.updatedAt }

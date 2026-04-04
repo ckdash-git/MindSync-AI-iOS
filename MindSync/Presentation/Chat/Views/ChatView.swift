@@ -115,7 +115,7 @@ struct ChatView: View {
                         Image(systemName: "arrow.up.circle.fill")
                             .font(.system(size: 32))
                             .foregroundStyle(Color.accentBrand)
-                            .opacity(viewModel.inputText.isEmpty ? 0.3 : 1.0)
+                            .opacity(viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.3 : 1.0)
                     }
                     .disabled(viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
