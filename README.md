@@ -8,10 +8,10 @@ A production-grade iOS client for multi-provider AI chat. Chat with GPT-4o, Clau
 
 - **Multi-provider chat** — OpenAI GPT-4o, Anthropic Claude 3.5 Sonnet, Google Gemini 1.5 Pro
 - **Real-time streaming** — token-by-token response rendering via Server-Sent Events
-- **BYOK (Bring Your Own Key)** — API keys stored securely in the iOS Keychain; never in plaintext
+- **BYOK (Bring Your Own Key)** — API keys stored securely in the iOS Keychain; managed via the in-app API Keys tab
 - **Provider switching** — swap models mid-session from the model selector
-- **AI Council** *(coming soon)* — send one prompt to all providers in parallel and compare responses
-- **Chat persistence** *(coming soon)* — full conversation history via SwiftData
+- **AI Council** — send one prompt to all providers in parallel and compare responses side-by-side
+- **Chat history** — full conversation persistence via JSON file storage; browsable session history
 - **Voice interaction** *(coming soon)*
 - **Cross-device sync** *(coming soon, PRO)*
 
@@ -41,9 +41,9 @@ MindSync AI is built on **Clean Architecture + MVVM** with strict layer separati
 | Layer | Contents |
 |-------|----------|
 | **Core** | Logger, AppError, KeychainManager, AppConstants, SwiftUI extensions |
-| **Domain** | `AIModel`, `ChatMessage`, `ChatSession` entities; `ChatRepositoryProtocol`; `SendMessageUseCase`, `ManageAPIKeyUseCase` |
-| **Data** | `NetworkManager` (async/await, SSE streaming); `OpenAIChatRepository`, `AnthropicChatRepository`, `GeminiChatRepository`; `ChatRepositoryRouter` |
-| **Presentation** | `ChatViewModel` (`@MainActor`), `ChatView`, `MessageBubbleView`, shared UI components |
+| **Domain** | `AIModel`, `ChatMessage`, `ChatSession` entities; `ChatRepositoryProtocol`, `ChatSessionRepositoryProtocol`; `SendMessageUseCase`, `SendCouncilMessageUseCase`, `ManageAPIKeyUseCase` |
+| **Data** | `NetworkManager` (async/await, SSE streaming); `OpenAIChatRepository`, `AnthropicChatRepository`, `GeminiChatRepository`, `ChatRepositoryRouter`; `ChatSessionLocalRepository` (JSON file storage) |
+| **Presentation** | `ChatViewModel` + `ChatView`; `CouncilViewModel` + `CouncilView`; `SessionHistoryViewModel` + `SessionHistoryView`; `APIKeyManagementViewModel` + `APIKeyManagementView`; shared UI components |
 | **Application** | `DependencyContainer` — single wiring point for all dependencies |
 
 ---
@@ -62,8 +62,8 @@ MindSync/
 │   └── Security/KeychainManager.swift
 ├── Domain/
 │   ├── Entities/          # AIModel, ChatMessage, ChatSession
-│   ├── Repositories/      # Protocol definitions
-│   └── UseCases/          # SendMessageUseCase, ManageAPIKeyUseCase
+│   ├── Repositories/      # ChatRepositoryProtocol, ChatSessionRepositoryProtocol
+│   └── UseCases/          # SendMessageUseCase, SendCouncilMessageUseCase, ManageAPIKeyUseCase
 ├── Data/
 │   ├── DTOs/              # Provider-specific request bodies
 │   ├── Network/
@@ -71,13 +71,22 @@ MindSync/
 │   │   ├── NetworkManager.swift
 │   │   ├── SSEParser.swift
 │   │   └── RequestInterceptor.swift
-│   └── Repositories/      # Concrete implementations + ChatRepositoryRouter
+│   └── Repositories/      # Concrete implementations, ChatRepositoryRouter, ChatSessionLocalRepository
 └── Presentation/
     ├── Chat/
     │   ├── Views/ChatView.swift
     │   └── ViewModels/ChatViewModel.swift
+    ├── Council/
+    │   ├── Views/CouncilView.swift + CouncilResponseCard.swift
+    │   └── ViewModels/CouncilViewModel.swift
+    ├── History/
+    │   ├── Views/SessionHistoryView.swift
+    │   └── ViewModels/SessionHistoryViewModel.swift
+    ├── APIKeyManagement/
+    │   ├── Views/APIKeyManagementView.swift
+    │   └── ViewModels/APIKeyManagementViewModel.swift
     └── Common/
-        └── Components/    # MessageBubbleView, LoadingView, ErrorBannerView
+        └── Components/    # MessageBubbleView, LoadingView, ErrorBannerView, EmptyStateView, TypingIndicatorView
 ```
 
 ---
@@ -86,7 +95,7 @@ MindSync/
 
 | Requirement | Version |
 |-------------|---------|
-| iOS | 16.0+ |
+| iOS | 18.6+ |
 | Xcode | 15.0+ |
 | Swift | 5.9+ |
 
@@ -108,34 +117,19 @@ open MindSync.xcodeproj
 
 Files created outside Xcode must be registered manually. In Xcode's Project Navigator, drag any new folders under `MindSync/` into the target. Make sure **Add to target: MindSync** is checked.
 
-### 3. Configure semantic colors
+### 3. Build and run
 
-The app uses named colors from `Assets.xcassets`. Add the following color sets in Xcode's asset catalog:
-
-| Name | Light | Dark |
-|------|-------|------|
-| `AccentBrand` | `#6C63FF` | `#6C63FF` |
-| `CardBackground` | `#FFFFFF` | `#1C1C1E` |
-| `SurfaceBackground` | `#F2F2F7` | `#000000` |
-| `PrimaryText` | `#000000` | `#FFFFFF` |
-| `SecondaryText` | `#6E6E73` | `#8E8E93` |
-| `UserBubble` | `#6C63FF` | `#6C63FF` |
-| `AssistantBubble` | `#F2F2F7` | `#2C2C2E` |
+Select a simulator or device running iOS 18.6+ and press **Run** (`Cmd+R`).
 
 ### 4. Add your API keys
 
-Keys are stored in the iOS Keychain via `ManageAPIKeyUseCase`. You can set them programmatically during development or build a BYOK settings screen (coming in `feature/byok-management`):
+Open the **API Keys** tab in the app and enter keys for each provider. Keys are stored securely in the iOS Keychain and never leave the device.
 
-```swift
-let container = DependencyContainer.shared
-try container.manageAPIKeyUseCase.saveKey("sk-...", for: .openAI)
-try container.manageAPIKeyUseCase.saveKey("sk-ant-...", for: .anthropic)
-try container.manageAPIKeyUseCase.saveKey("AIza...", for: .gemini)
-```
-
-### 5. Build and run
-
-Select a simulator or device running iOS 16+ and press **Run** (`Cmd+R`).
+| Provider | Where to get a key |
+|----------|--------------------|
+| OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| Anthropic | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) |
+| Google Gemini | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) |
 
 ---
 
@@ -155,10 +149,10 @@ Select a simulator or device running iOS 16+ and press **Run** (`Cmd+R`).
 |---------|--------|--------|
 | Project setup + base architecture | `feature/project-setup` | Merged |
 | OpenAI, Anthropic, Gemini streaming | `feature/networking-layer` | Merged |
-| Chat UI polish + model selector | `feature/chat-module` | Planned |
-| AI Council (parallel comparison) | `feature/ai-council` | Planned |
-| Chat persistence (SwiftData) | `feature/local-storage` | Planned |
-| BYOK key management UI | `feature/byok-management` | Planned |
+| Chat UI polish + model selector | `feature/chat-module` | Merged |
+| AI Council (parallel comparison) | `feature/ai-council` | Merged |
+| Chat persistence (JSON storage) | `feature/local-storage` | Merged |
+| BYOK key management UI | `feature/byok-management` | Merged |
 | Voice interaction | `feature/voice` | Planned |
 | Cross-device sync (PRO) | `feature/sync` | Planned |
 
