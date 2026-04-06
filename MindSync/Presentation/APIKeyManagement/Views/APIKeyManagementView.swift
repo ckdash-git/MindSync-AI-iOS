@@ -2,7 +2,7 @@ import SwiftUI
 
 struct APIKeyManagementView: View {
 
-    private static let openRouterKeysURL = URL(string: "https://openrouter.ai/keys")!
+    private static let openRouterKeysURL = URL(string: "https://openrouter.ai/keys")
 
     @StateObject private var viewModel: APIKeyManagementViewModel
 
@@ -24,13 +24,15 @@ struct APIKeyManagementView: View {
                     
                     keyCard
                     
-                    Link(destination: Self.openRouterKeysURL) {
-                        HStack(spacing: 6) {
-                            Text("Get OpenRouter Key")
-                            Image(systemName: "arrow.up.right.square")
+                    if let openRouterURL = Self.openRouterKeysURL {
+                        Link(destination: openRouterURL) {
+                            HStack(spacing: 6) {
+                                Text("Get OpenRouter Key")
+                                Image(systemName: "arrow.up.right.square")
+                            }
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Color.accentBrand)
                         }
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(Color.accentBrand)
                     }
                 }
                 .padding()
