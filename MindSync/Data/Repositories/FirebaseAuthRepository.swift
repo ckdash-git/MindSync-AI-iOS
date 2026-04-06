@@ -1,5 +1,7 @@
 import Foundation
 import FirebaseAuth
+import FirebaseCore
+import GoogleSignIn
 
 /// Firebase-backed implementation of `AuthRepositoryProtocol`.
 final class FirebaseAuthRepository: AuthRepositoryProtocol {
@@ -54,6 +56,54 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
         }
     }
 
+    // MARK: - Google Sign-In
+
+    func signInWithGoogle() async throws -> AppUser {
+        // 1. Get the client ID from the Firebase config
+        guard let clientID = FirebaseApp.app()?.options.clientID else {
+            throw AppError.custom(message: "Firebase client ID not found. Ensure GoogleService-Info.plist is configured.")
+        }
+
+        // 2. Get the presenting view controller
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootViewController = await windowScene.windows.first?.rootViewController else {
+            throw AppError.custom(message: "Unable to find root view controller for Google Sign-In.")
+        }
+
+        // 3. Configure Google Sign-In
+        let config = GIDConfiguration(clientID: clientID)
+        GIDSignIn.sharedInstance.configuration = config
+
+        // 4. Present the Google Sign-In flow
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+
+            guard let idToken = result.user.idToken?.tokenString else {
+                throw AppError.custom(message: "Failed to retrieve Google ID token.")
+            }
+
+            let accessToken = result.user.accessToken.tokenString
+
+            // 5. Create Firebase credential from Google tokens
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken,
+                accessToken: accessToken
+            )
+
+            // 6. Sign in to Firebase with the Google credential
+            let authResult = try await auth.signIn(with: credential)
+            logInfo("Google sign-in successful: \(authResult.user.uid)")
+            return authResult.user.toAppUser()
+        } catch {
+            // User cancelled the Google Sign-In flow
+            if (error as NSError).code == GIDSignInError.canceled.rawValue {
+                throw AppError.custom(message: "Google Sign-In was cancelled.")
+            }
+            logError("Google sign-in failed: \(error.localizedDescription)")
+            throw error.toAppError()
+        }
+    }
+
     // MARK: - Password Reset
 
     func sendPasswordReset(to email: String) async throws {
@@ -70,6 +120,8 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
 
     func signOut() throws {
         do {
+            // Sign out from Google as well
+            GIDSignIn.sharedInstance.signOut()
             try auth.signOut()
             logInfo("User signed out")
         } catch {

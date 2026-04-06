@@ -5,6 +5,7 @@ protocol AuthUseCaseProtocol {
     var currentUser: AppUser? { get }
     func signIn(email: String, password: String) async throws -> AppUser
     func signUp(email: String, password: String, displayName: String) async throws -> AppUser
+    func signInWithGoogle() async throws -> AppUser
     func sendPasswordReset(to email: String) async throws
     func signOut() throws
     func authStateChanges() -> AsyncStream<AppUser?>
@@ -28,6 +29,10 @@ final class AuthUseCase: AuthUseCaseProtocol {
 
     func signUp(email: String, password: String, displayName: String) async throws -> AppUser {
         try await repository.signUp(email: email, password: password, displayName: displayName)
+    }
+
+    func signInWithGoogle() async throws -> AppUser {
+        try await repository.signInWithGoogle()
     }
 
     func sendPasswordReset(to email: String) async throws {
