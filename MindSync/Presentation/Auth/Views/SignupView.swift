@@ -66,7 +66,7 @@ struct SignupView: View {
                 // Social Actions
                 VStack(spacing: 16) {
                     SocialAuthButton(provider: .google, action: { viewModel.signInWithGoogle() })
-                    SocialAuthButton(provider: .github, action: {})
+                    SocialAuthButton(provider: .github, action: { viewModel.signInWithGitHub() })
                 }
 
                 Spacer(minLength: 40)

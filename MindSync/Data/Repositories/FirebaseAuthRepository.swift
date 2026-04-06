@@ -104,6 +104,29 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
         }
     }
 
+    // MARK: - GitHub Sign-In
+
+    func signInWithGitHub() async throws -> AppUser {
+        let provider = OAuthProvider(providerID: "github.com")
+        provider.scopes = ["user:email"]
+
+        do {
+            let credential = try await provider.credential(with: nil)
+            let authResult = try await auth.signIn(with: credential)
+            logInfo("GitHub sign-in successful: \(authResult.user.uid)")
+            return authResult.user.toAppUser()
+        } catch {
+            let nsError = error as NSError
+            // User cancelled the auth flow
+            if nsError.code == AuthErrorCode.webContextCancelled.rawValue ||
+               nsError.code == AuthErrorCode.webContextAlreadyPresented.rawValue {
+                throw AppError.custom(message: "GitHub Sign-In was cancelled.")
+            }
+            logError("GitHub sign-in failed: \(error.localizedDescription)")
+            throw error.toAppError()
+        }
+    }
+
     // MARK: - Password Reset
 
     func sendPasswordReset(to email: String) async throws {
