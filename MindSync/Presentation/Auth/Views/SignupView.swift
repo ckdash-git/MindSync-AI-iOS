@@ -2,11 +2,8 @@ import SwiftUI
 
 struct SignupView: View {
     @Binding var showSignup: Bool
-    
-    @State private var fullName = ""
-    @State private var email = ""
-    @State private var password = ""
-    
+    @ObservedObject var viewModel: AuthViewModel
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 32) {
@@ -16,35 +13,42 @@ struct SignupView: View {
                         Text("Create an Account")
                             .font(.largeTitle.weight(.bold))
                             .foregroundColor(Color.primaryText)
-                        
+
                         Text("Join MindSync to power your AI thoughts.")
                             .font(.subheadline)
                             .foregroundColor(Color.secondaryText)
                     }
                 }
                 .padding(.top, 40)
-                
+
                 // Form
                 VStack(spacing: 16) {
-                    AuthTextField(placeholder: "Full Name", text: $fullName, iconName: "person")
-                    AuthTextField(placeholder: "Email Address", text: $email, iconName: "envelope")
-                    AuthTextField(placeholder: "Password", text: $password, iconName: "lock", isSecure: true)
-                    
+                    AuthTextField(placeholder: "Full Name", text: $viewModel.fullName, iconName: "person")
+                    AuthTextField(placeholder: "Email Address", text: $viewModel.email, iconName: "envelope")
+                    AuthTextField(placeholder: "Password", text: $viewModel.password, iconName: "lock", isSecure: true)
+
                     Button {
-                        // Action
+                        viewModel.signUp()
                     } label: {
-                        Text("Sign Up")
-                            .font(.headline.weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.accentBrand)
-                            .foregroundColor(.white)
-                            .cornerRadius(AppConstants.UI.cornerRadius)
-                            .shadow(color: Color.accentBrand.opacity(0.3), radius: 8, x: 0, y: 4)
+                        HStack(spacing: 8) {
+                            if viewModel.isLoading {
+                                ProgressView()
+                                    .tint(.white)
+                            }
+                            Text("Sign Up")
+                                .font(.headline.weight(.semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(viewModel.isLoading ? Color.accentBrand.opacity(0.6) : Color.accentBrand)
+                        .foregroundColor(.white)
+                        .cornerRadius(AppConstants.UI.cornerRadius)
+                        .shadow(color: Color.accentBrand.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
+                    .disabled(viewModel.isLoading)
                     .padding(.top, 16)
                 }
-                
+
                 // Divider
                 HStack {
                     Rectangle()
@@ -58,15 +62,15 @@ struct SignupView: View {
                         .fill(Color.secondaryText.opacity(0.2))
                         .frame(height: 1)
                 }
-                
+
                 // Social Actions
                 VStack(spacing: 16) {
                     SocialAuthButton(provider: .google, action: {})
                     SocialAuthButton(provider: .github, action: {})
                 }
-                
+
                 Spacer(minLength: 40)
-                
+
                 // Footer
                 HStack(spacing: 4) {
                     Text("Already have an account?")
@@ -85,9 +89,17 @@ struct SignupView: View {
             .padding(.horizontal, 24)
         }
         .background(Color.cardBackground.ignoresSafeArea())
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "An unexpected error occurred.")
+        }
     }
 }
 
 #Preview {
-    SignupView(showSignup: .constant(true))
+    SignupView(
+        showSignup: .constant(true),
+        viewModel: AuthViewModel(authUseCase: AuthUseCase(repository: FirebaseAuthRepository()))
+    )
 }

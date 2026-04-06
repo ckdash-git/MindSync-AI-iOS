@@ -6,13 +6,37 @@
 //
 
 import SwiftUI
+import FirebaseCore
+
+// Firebase App Delegate for initialization
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        FirebaseApp.configure()
+        return true
+    }
+}
 
 @main
 struct MindSyncApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var authViewModel = DependencyContainer.shared.makeAuthViewModel()
 
     var body: some Scene {
         WindowGroup {
-            AuthView()
+            Group {
+                if authViewModel.isAuthenticated {
+                    ContentView()
+                } else {
+                    AuthView()
+                }
+            }
+            .animation(.easeInOut(duration: 0.3), value: authViewModel.isAuthenticated)
+            .task {
+                await authViewModel.listenToAuthState()
+            }
         }
     }
 }
