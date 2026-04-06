@@ -13,6 +13,9 @@ protocol AuthRepositoryProtocol {
     /// Create a new account with email, password, and display name.
     func signUp(email: String, password: String, displayName: String) async throws -> AppUser
 
+    /// Sign in (or sign up) with Google.
+    func signInWithGoogle() async throws -> AppUser
+
     /// Send a password-reset email.
     func sendPasswordReset(to email: String) async throws
 

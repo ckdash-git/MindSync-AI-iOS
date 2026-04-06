@@ -113,6 +113,30 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Google Sign-In
+
+    func signInWithGoogle() {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
+
+            do {
+                let user = try await authUseCase.signInWithGoogle()
+                self.currentUser = user
+                self.isAuthenticated = true
+                clearFields()
+                logInfo("Google sign-in successful for \(user.email)")
+            } catch {
+                // Don't show error for user cancellation
+                if case .custom(let msg) = (error as? AppError), msg.contains("cancelled") {
+                    logInfo("Google sign-in cancelled by user")
+                    return
+                }
+                presentError(error)
+            }
+        }
+    }
+
     // MARK: - Sign Out
 
     func signOut() {
