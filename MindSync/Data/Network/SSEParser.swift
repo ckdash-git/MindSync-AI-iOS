@@ -41,6 +41,10 @@ enum SSEParser {
             return text
         }
 
+        // Backend flat format: { "content": "..." } or { "delta": "..." }
+        if let content = json["content"] as? String { return content }
+        if let delta = json["delta"] as? String { return delta }
+
         return nil
     }
 }

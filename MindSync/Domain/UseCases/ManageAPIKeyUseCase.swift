@@ -10,9 +10,14 @@ protocol ManageAPIKeyUseCaseProtocol {
 final class ManageAPIKeyUseCase: ManageAPIKeyUseCaseProtocol {
 
     private let apiKeyRepository: APIKeyRepositoryProtocol
+    private let networkManager: NetworkManagerProtocol
 
-    init(apiKeyRepository: APIKeyRepositoryProtocol) {
+    init(
+        apiKeyRepository: APIKeyRepositoryProtocol,
+        networkManager: NetworkManagerProtocol
+    ) {
         self.apiKeyRepository = apiKeyRepository
+        self.networkManager = networkManager
     }
 
     func saveKey(_ key: String) async throws {
@@ -20,20 +25,12 @@ final class ManageAPIKeyUseCase: ManageAPIKeyUseCaseProtocol {
         guard !trimmed.isEmpty else {
             throw AppError.custom(message: "API key cannot be empty.")
         }
-        
-        guard let url = URL(string: AppConstants.API.openRouterAuthURL) else {
-            throw AppError.custom(message: "Invalid validation URL.")
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(trimmed)", forHTTPHeaderField: "Authorization")
-        
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AppError.custom(message: "Invalid API Key. Verification failed.")
-        }
-        guard httpResponse.statusCode == 200 else {
-            throw AppError.custom(message: "Invalid API Key. Verification failed.")
+
+        let endpoint = HealthEndpoint(apiKey: trimmed)
+        do {
+            _ = try await networkManager.request(endpoint, responseType: HealthResponseDTO.self)
+        } catch {
+            throw AppError.custom(message: "Invalid API key. Verification failed.")
         }
 
         try apiKeyRepository.saveKey(trimmed)
