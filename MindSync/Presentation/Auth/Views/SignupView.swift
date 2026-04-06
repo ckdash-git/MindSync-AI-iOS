@@ -100,6 +100,6 @@ struct SignupView: View {
 #Preview {
     SignupView(
         showSignup: .constant(true),
-        viewModel: AuthViewModel(authUseCase: AuthUseCase(repository: FirebaseAuthRepository()))
+        viewModel: AuthViewModel(authUseCase: MockAuthUseCase())
     )
 }

@@ -57,7 +57,7 @@ final class AuthViewModel: ObservableObject {
                 self.currentUser = user
                 self.isAuthenticated = true
                 clearFields()
-                logInfo("Sign-in successful for \(user.email)")
+                logInfo("Sign-in successful for user \(user.id)")
             } catch {
                 presentError(error)
             }
@@ -82,7 +82,7 @@ final class AuthViewModel: ObservableObject {
                 self.currentUser = user
                 self.isAuthenticated = true
                 clearFields()
-                logInfo("Sign-up successful for \(user.email)")
+                logInfo("Sign-up successful for user \(user.id)")
             } catch {
                 presentError(error)
             }
@@ -106,7 +106,7 @@ final class AuthViewModel: ObservableObject {
                 try await authUseCase.sendPasswordReset(to: trimmedEmail)
                 resetEmailSent = true
                 showResetAlert = true
-                logInfo("Password reset sent to \(trimmedEmail)")
+                logInfo("Password reset email sent")
             } catch {
                 presentError(error)
             }
@@ -125,10 +125,9 @@ final class AuthViewModel: ObservableObject {
                 self.currentUser = user
                 self.isAuthenticated = true
                 clearFields()
-                logInfo("Google sign-in successful for \(user.email)")
+                logInfo("Google sign-in successful for user \(user.id)")
             } catch {
-                // Don't show error for user cancellation
-                if case .custom(let msg) = (error as? AppError), msg.contains("cancelled") {
+                if (error as? AppError) == .userCancelled {
                     logInfo("Google sign-in cancelled by user")
                     return
                 }
@@ -149,10 +148,9 @@ final class AuthViewModel: ObservableObject {
                 self.currentUser = user
                 self.isAuthenticated = true
                 clearFields()
-                logInfo("GitHub sign-in successful for \(user.email)")
+                logInfo("GitHub sign-in successful for user \(user.id)")
             } catch {
-                // Don't show error for user cancellation
-                if case .custom(let msg) = (error as? AppError), msg.contains("cancelled") {
+                if (error as? AppError) == .userCancelled {
                     logInfo("GitHub sign-in cancelled by user")
                     return
                 }

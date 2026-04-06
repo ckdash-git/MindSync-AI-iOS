@@ -32,7 +32,8 @@ struct LoginView: View {
                             viewModel.sendPasswordReset()
                         }
                         .font(.footnote.weight(.medium))
-                        .foregroundColor(Color.accentBrand)
+                        .foregroundColor(viewModel.email.isEmpty ? Color.secondaryText : Color.accentBrand)
+                        .disabled(viewModel.email.isEmpty)
                     }
 
                     Button {
@@ -113,6 +114,6 @@ struct LoginView: View {
 #Preview {
     LoginView(
         showSignup: .constant(false),
-        viewModel: AuthViewModel(authUseCase: AuthUseCase(repository: FirebaseAuthRepository()))
+        viewModel: AuthViewModel(authUseCase: MockAuthUseCase())
     )
 }

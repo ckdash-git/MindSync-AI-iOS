@@ -13,6 +13,7 @@ enum AppError: LocalizedError, Equatable {
     // Auth / Keys
     case missingAPIKey(provider: String)
     case invalidAPIKey(provider: String)
+    case userCancelled
 
     // Storage
     case persistenceFailed
@@ -40,6 +41,8 @@ enum AppError: LocalizedError, Equatable {
             return "No API key found for \(provider). Please add your key in Settings."
         case .invalidAPIKey(let provider):
             return "The API key for \(provider) is invalid."
+        case .userCancelled:
+            return "The operation was cancelled."
         case .persistenceFailed:
             return "Failed to save data locally."
         case .keychainFailed:

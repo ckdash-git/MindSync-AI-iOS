@@ -40,7 +40,7 @@ struct MindSyncApp: App {
                 if authViewModel.isAuthenticated {
                     ContentView()
                 } else {
-                    AuthView()
+                    AuthView(viewModel: authViewModel)
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: authViewModel.isAuthenticated)

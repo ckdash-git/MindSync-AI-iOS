@@ -2,6 +2,7 @@ import Foundation
 import FirebaseAuth
 import FirebaseCore
 import GoogleSignIn
+import CryptoKit
 
 /// Firebase-backed implementation of `AuthRepositoryProtocol`.
 final class FirebaseAuthRepository: AuthRepositoryProtocol {
@@ -47,7 +48,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
             // Reload so the local user object picks up the new name
             try await result.user.reload()
 
-            let user = Auth.auth().currentUser ?? result.user
+            let user = self.auth.currentUser ?? result.user
             logInfo("User signed up: \(user.uid)")
             return user.toAppUser()
         } catch {
@@ -64,10 +65,13 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
             throw AppError.custom(message: "Firebase client ID not found. Ensure GoogleService-Info.plist is configured.")
         }
 
-        // 2. Get the presenting view controller
-        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = await windowScene.windows.first?.rootViewController else {
-            throw AppError.custom(message: "Unable to find root view controller for Google Sign-In.")
+        // 2. Get the presenting view controller on the main thread
+        let rootViewController = try await MainActor.run {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first?.rootViewController else {
+                throw AppError.custom(message: "Unable to find root view controller for Google Sign-In.")
+            }
+            return rootVC
         }
 
         // 3. Configure Google Sign-In
@@ -97,7 +101,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
         } catch {
             // User cancelled the Google Sign-In flow
             if (error as NSError).code == GIDSignInError.canceled.rawValue {
-                throw AppError.custom(message: "Google Sign-In was cancelled.")
+                throw AppError.userCancelled
             }
             logError("Google sign-in failed: \(error.localizedDescription)")
             throw error.toAppError()
@@ -120,7 +124,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
             // User cancelled the auth flow
             if nsError.code == AuthErrorCode.webContextCancelled.rawValue ||
                nsError.code == AuthErrorCode.webContextAlreadyPresented.rawValue {
-                throw AppError.custom(message: "GitHub Sign-In was cancelled.")
+                throw AppError.userCancelled
             }
             logError("GitHub sign-in failed: \(error.localizedDescription)")
             throw error.toAppError()
@@ -132,9 +136,9 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
     func sendPasswordReset(to email: String) async throws {
         do {
             try await auth.sendPasswordReset(withEmail: email)
-            logInfo("Password-reset email sent to \(email)")
+            logInfo("Password-reset email sent")
         } catch {
-            logError("Password reset failed: \(error.localizedDescription)")
+            logError("Password reset failed")
             throw error.toAppError()
         }
     }
@@ -156,12 +160,13 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
     // MARK: - Auth State Observer
 
     func authStateChanges() -> AsyncStream<AppUser?> {
-        AsyncStream { continuation in
-            let handle = auth.addStateDidChangeListener { _, user in
+        let authInstance = self.auth
+        return AsyncStream { continuation in
+            let handle = authInstance.addStateDidChangeListener { _, user in
                 continuation.yield(user?.toAppUser())
             }
             continuation.onTermination = { _ in
-                Auth.auth().removeStateDidChangeListener(handle)
+                authInstance.removeStateDidChangeListener(handle)
             }
         }
     }
@@ -173,7 +178,7 @@ private extension FirebaseAuth.User {
     func toAppUser() -> AppUser {
         AppUser(
             id: uid,
-            email: email ?? "",
+            email: email,
             displayName: displayName,
             photoURL: photoURL,
             isEmailVerified: isEmailVerified

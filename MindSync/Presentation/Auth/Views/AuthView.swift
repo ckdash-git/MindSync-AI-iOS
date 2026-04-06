@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AuthView: View {
-    @StateObject private var viewModel = DependencyContainer.shared.makeAuthViewModel()
+    @ObservedObject var viewModel: AuthViewModel
     @State private var showSignup: Bool = false
 
     var body: some View {
@@ -19,5 +19,5 @@ struct AuthView: View {
 }
 
 #Preview {
-    AuthView()
+    AuthView(viewModel: AuthViewModel(authUseCase: MockAuthUseCase()))
 }
