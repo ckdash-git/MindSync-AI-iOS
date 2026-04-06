@@ -16,9 +16,14 @@ final class APIKeyManagementViewModel: ObservableObject {
     @Published var isVerifying: Bool = false
 
     private let useCase: ManageAPIKeyUseCaseProtocol
+    private var saveTask: Task<Void, Never>?
 
     init(useCase: ManageAPIKeyUseCaseProtocol) {
         self.useCase = useCase
+    }
+    
+    deinit {
+        saveTask?.cancel()
     }
 
     func loadKeyStatus() {
@@ -26,19 +31,25 @@ final class APIKeyManagementViewModel: ObservableObject {
     }
 
     func save() {
-        Task {
+        saveTask?.cancel()
+        saveTask = Task {
             isVerifying = true
             feedback = nil
             do {
                 try await useCase.saveKey(draftKey)
+                if Task.isCancelled { return }
                 hasStoredKey = true
                 draftKey = ""
                 isRevealed = false
                 feedback = .saved
+            } catch is CancellationError {
+                return
             } catch {
+                if Task.isCancelled { return }
                 feedback = .error(error.localizedDescription)
                 logError("Save API key failed: \(error.localizedDescription)")
             }
+            if Task.isCancelled { return }
             isVerifying = false
         }
     }

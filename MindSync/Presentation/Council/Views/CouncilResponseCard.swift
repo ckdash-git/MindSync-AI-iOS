@@ -52,31 +52,11 @@ struct CouncilResponseCard: View {
     private var providerIconView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 7)
-                .fill(providerColor.opacity(0.15))
+                .fill(response.model.provider.accentColor.opacity(0.15))
                 .frame(width: 28, height: 28)
-            Text(providerInitials)
+            Text(response.model.provider.initials)
                 .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(providerColor)
-        }
-    }
-
-    // MARK: - Helpers
-
-    private var providerColor: Color {
-        switch response.model.provider {
-        case .openAI:    return .openAIAccent
-        case .anthropic: return .anthropicAccent
-        case .gemini:    return .geminiAccent
-        case .nvidia:    return .nvidiaAccent
-        }
-    }
-
-    private var providerInitials: String {
-        switch response.model.provider {
-        case .openAI:    return "GPT"
-        case .anthropic: return "ANT"
-        case .gemini:    return "GEM"
-        case .nvidia:    return "NVD"
+                .foregroundStyle(response.model.provider.accentColor)
         }
     }
 }

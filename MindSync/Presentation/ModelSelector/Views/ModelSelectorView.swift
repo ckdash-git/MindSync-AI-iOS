@@ -73,28 +73,10 @@ private struct ModelRowView: View {
     private var providerIconView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
-                .fill(providerColor.opacity(0.15))
-            Text(providerInitials)
+                .fill(model.provider.accentColor.opacity(0.15))
+            Text(model.provider.initials)
                 .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(providerColor)
-        }
-    }
-
-    private var providerColor: Color {
-        switch model.provider {
-        case .openAI:    return .openAIAccent
-        case .anthropic: return .anthropicAccent
-        case .gemini:    return .geminiAccent
-        case .nvidia:    return .nvidiaAccent
-        }
-    }
-
-    private var providerInitials: String {
-        switch model.provider {
-        case .openAI:    return "GPT"
-        case .anthropic: return "ANT"
-        case .gemini:    return "GEM"
-        case .nvidia:    return "NVD"
+                .foregroundStyle(model.provider.accentColor)
         }
     }
 

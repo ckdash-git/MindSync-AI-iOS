@@ -47,7 +47,26 @@ actor ChatSessionLocalRepository: ChatSessionRepositoryProtocol {
         for fileURL in files where fileURL.pathExtension == "json" {
             do {
                 let data = try Data(contentsOf: fileURL)
-                sessions.append(try decoder.decode(ChatSession.self, from: data))
+                var session = try decoder.decode(ChatSession.self, from: data)
+                
+                let oldId = session.selectedModel.id
+                if let canonical = AIModel.allModels.first(where: {
+                    $0.id == oldId ||
+                    $0.id.hasSuffix(oldId) ||
+                    oldId.hasSuffix($0.id)
+                }) {
+                    session.selectedModel = canonical
+                } else if oldId.contains("gpt-4o") {
+                    session.selectedModel = .gpt4o
+                } else if oldId.contains("claude") {
+                    session.selectedModel = .claude3Sonnet
+                } else if oldId.contains("gemini") {
+                    session.selectedModel = .geminiPro
+                } else if oldId.contains("nemotron") {
+                    session.selectedModel = .nemotron
+                }
+                
+                sessions.append(session)
             } catch {
                 let name = fileURL.lastPathComponent
                 let desc = error.localizedDescription

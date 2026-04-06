@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum AIProvider: String, CaseIterable, Codable, Identifiable {
     case openAI = "openai"
@@ -13,7 +14,25 @@ enum AIProvider: String, CaseIterable, Codable, Identifiable {
         case .openAI: return "GPT"
         case .anthropic: return "Claude"
         case .gemini: return "Gemini"
-        case .nvidia: return "Nvidia"
+        case .nvidia: return "NVIDIA"
+        }
+    }
+    
+    var accentColor: Color {
+        switch self {
+        case .openAI:    return .openAIAccent
+        case .anthropic: return .anthropicAccent
+        case .gemini:    return .geminiAccent
+        case .nvidia:    return .nvidiaAccent
+        }
+    }
+
+    var initials: String {
+        switch self {
+        case .openAI:    return "GPT"
+        case .anthropic: return "ANT"
+        case .gemini:    return "GEM"
+        case .nvidia:    return "NVD"
         }
     }
 }

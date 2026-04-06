@@ -57,8 +57,12 @@ struct APIKeyManagementView: View {
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
         .task(id: viewModel.feedback) {
             guard viewModel.feedback != nil else { return }
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            viewModel.clearFeedback()
+            do {
+                try await Task.sleep(nanoseconds: 2_000_000_000)
+                viewModel.clearFeedback()
+            } catch {
+                return
+            }
         }
     }
 
