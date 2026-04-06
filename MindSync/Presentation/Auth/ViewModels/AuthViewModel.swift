@@ -137,6 +137,30 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    // MARK: - GitHub Sign-In
+
+    func signInWithGitHub() {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
+
+            do {
+                let user = try await authUseCase.signInWithGitHub()
+                self.currentUser = user
+                self.isAuthenticated = true
+                clearFields()
+                logInfo("GitHub sign-in successful for \(user.email)")
+            } catch {
+                // Don't show error for user cancellation
+                if case .custom(let msg) = (error as? AppError), msg.contains("cancelled") {
+                    logInfo("GitHub sign-in cancelled by user")
+                    return
+                }
+                presentError(error)
+            }
+        }
+    }
+
     // MARK: - Sign Out
 
     func signOut() {
