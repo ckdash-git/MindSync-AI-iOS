@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Central dependency container using protocol-based DI.
 /// All dependencies are resolved here once and shared via environment or direct injection.
@@ -25,6 +26,13 @@ final class DependencyContainer {
             authTokenRepository: authTokenRepository
         )
     )
+
+    // MARK: - Auth
+    lazy var authRepository: AuthRepositoryProtocol = FirebaseAuthRepository(
+        networkManager: networkManager,
+        authTokenRepository: authTokenRepository
+    )
+    lazy var authUseCase: AuthUseCaseProtocol = AuthUseCase(repository: authRepository)
 
     // MARK: - Repositories
     lazy var chatRepository: ChatRepositoryProtocol = BackendChatRepository(
@@ -57,6 +65,11 @@ final class DependencyContainer {
     lazy var sessionRepository: ChatSessionRepositoryProtocol = ChatSessionLocalRepository()
 
     // MARK: - ViewModels
+
+    @MainActor func makeAuthViewModel() -> AuthViewModel {
+        AuthViewModel(authUseCase: authUseCase, authTokenRepository: authTokenRepository)
+    }
+
     @MainActor func makeChatViewModel(session: ChatSession = ChatSession()) -> ChatViewModel {
         let sendMessageUseCase = SendMessageUseCase(chatRepository: chatRepository)
         return ChatViewModel(

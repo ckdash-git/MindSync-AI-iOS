@@ -1,12 +1,21 @@
 import Foundation
 
-/// Centralizes backend authentication header injection.
+extension Notification.Name {
+    /// Posted by `BackendAuthInterceptor` when the backend returns HTTP 401.
+    /// Observers (e.g. `AuthViewModel`) should sign the user out and redirect to login.
+    static let backendSessionExpired = Notification.Name("com.mindsync.backendSessionExpired")
+}
+
+/// Centralises authentication header injection for MindSync backend calls.
 ///
-/// - Injects `X-OpenRouter-Key: <key>` (required for all non-auth requests).
-/// - Injects `Authorization: Bearer <jwt>` when a JWT is present (optional; absent before first login).
-/// - Skips injection entirely for `/api/v1/auth/` endpoints (login / register).
-/// - Logs request URL and status code at debug level; API key value is always masked.
+/// - Injects `X-OpenRouter-Key` (required on protected routes).
+/// - Injects `Authorization: Bearer <jwt>` when a valid token is present.
+/// - Skips injection for `/api/v1/auth/` endpoints (login, register, social-login).
+/// - Passes non-backend requests (OpenRouter, Anthropic, Gemini) through unchanged.
+/// - Posts `.backendSessionExpired` and throws `AppError.unauthorized` on HTTP 401.
 final class BackendAuthInterceptor: RequestInterceptorProtocol {
+
+    private static let backendHost = URL(string: AppConstants.API.backendBaseURL)?.host ?? ""
 
     private let apiKeyRepository: APIKeyRepositoryProtocol
     private let authTokenRepository: AuthTokenRepositoryProtocol
@@ -21,30 +30,47 @@ final class BackendAuthInterceptor: RequestInterceptorProtocol {
 
     func intercept(request: URLRequest) async throws -> URLRequest {
         var request = request
+
+        // Only touch requests destined for the MindSync backend.
+        guard request.url?.host == Self.backendHost else {
+            return request
+        }
+
         let path = request.url?.path ?? ""
 
         // Auth endpoints carry their own credentials — skip injection.
-        guard !path.hasPrefix("/api/v1/auth/") else {
+        guard !path.hasPrefix(AppConstants.API.Auth.basePath) else {
             logDebug("[\(request.httpMethod ?? "?")] \(path) [auth endpoint — no injection]")
             return request
         }
 
-        // JWT is optional: not present before first login or after logout.
+        // JWT — optional: not present before first login.
         if let jwt = try? authTokenRepository.getAccessToken() {
             request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
         }
 
-        // OpenRouter key is required for all protected endpoints.
+        // OpenRouter key — required for all protected backend endpoints.
         let apiKey = try apiKeyRepository.getKey()
         request.setValue(apiKey, forHTTPHeaderField: "X-OpenRouter-Key")
 
-        logDebug("[\(request.httpMethod ?? "?")] \(request.url?.absoluteString ?? path) [X-OpenRouter-Key: ***REDACTED***]")
+        logDebug("[\(request.httpMethod ?? "?")] \(path) [X-OpenRouter-Key: ***REDACTED***]")
         return request
     }
 
     func intercept(response: HTTPURLResponse, data: Data) async throws {
-        logDebug("HTTP \(response.statusCode) ← \(response.url?.path ?? "?")")
+        // Only watch responses from the MindSync backend.
+        guard response.url?.host == Self.backendHost else { return }
+
+        let path = response.url?.path ?? ""
+
+        // Auth endpoints return 401 for wrong credentials — that is expected behaviour,
+        // not a session expiry. Let the calling code handle those errors.
+        guard !path.hasPrefix(AppConstants.API.Auth.basePath) else { return }
+
+        logDebug("HTTP \(response.statusCode) ← \(path)")
+
         if response.statusCode == 401 {
+            NotificationCenter.default.post(name: .backendSessionExpired, object: nil)
             throw AppError.unauthorized
         }
     }
