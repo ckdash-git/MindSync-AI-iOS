@@ -99,12 +99,12 @@ struct LoginView: View {
         }
         .background(Color.cardBackground.ignoresSafeArea())
         .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) { /* Dismiss alert. */ }
         } message: {
             Text(viewModel.errorMessage ?? "An unexpected error occurred.")
         }
         .alert("Password Reset", isPresented: $viewModel.showResetAlert) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) { /* Dismiss alert. */ }
         } message: {
             Text("A password reset link has been sent to your email address.")
         }

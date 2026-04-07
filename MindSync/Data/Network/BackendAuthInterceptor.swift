@@ -15,6 +15,8 @@ extension Notification.Name {
 /// - Posts `.backendSessionExpired` and throws `AppError.unauthorized` on HTTP 401.
 final class BackendAuthInterceptor: RequestInterceptorProtocol {
 
+    private static let backendHost = URL(string: AppConstants.API.backendBaseURL)?.host ?? ""
+
     private let apiKeyRepository: APIKeyRepositoryProtocol
     private let authTokenRepository: AuthTokenRepositoryProtocol
 
@@ -30,7 +32,7 @@ final class BackendAuthInterceptor: RequestInterceptorProtocol {
         var request = request
 
         // Only touch requests destined for the MindSync backend.
-        guard request.url?.host == "ai.api.optionallabs.com" else {
+        guard request.url?.host == Self.backendHost else {
             return request
         }
 
@@ -57,7 +59,7 @@ final class BackendAuthInterceptor: RequestInterceptorProtocol {
 
     func intercept(response: HTTPURLResponse, data: Data) async throws {
         // Only watch responses from the MindSync backend.
-        guard response.url?.host == "ai.api.optionallabs.com" else { return }
+        guard response.url?.host == Self.backendHost else { return }
 
         let path = response.url?.path ?? ""
 

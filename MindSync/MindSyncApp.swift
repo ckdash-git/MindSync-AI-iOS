@@ -12,8 +12,8 @@ import GoogleSignIn
 // Firebase App Delegate for initialization
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+        _: UIApplication,
+        didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         FirebaseApp.configure()
         return true
@@ -21,9 +21,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     // Handle Google Sign-In redirect URL
     func application(
-        _ app: UIApplication,
+        _: UIApplication,
         open url: URL,
-        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+        options _: [UIApplication.OpenURLOptionsKey: Any] = [:]
     ) -> Bool {
         return GIDSignIn.sharedInstance.handle(url)
     }

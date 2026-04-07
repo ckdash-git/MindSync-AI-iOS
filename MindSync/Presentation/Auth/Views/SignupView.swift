@@ -90,7 +90,7 @@ struct SignupView: View {
         }
         .background(Color.cardBackground.ignoresSafeArea())
         .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) { /* Dismiss alert. */ }
         } message: {
             Text(viewModel.errorMessage ?? "An unexpected error occurred.")
         }
