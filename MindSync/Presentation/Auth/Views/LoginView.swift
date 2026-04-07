@@ -114,6 +114,6 @@ struct LoginView: View {
 #Preview {
     LoginView(
         showSignup: .constant(false),
-        viewModel: AuthViewModel(authUseCase: MockAuthUseCase())
+        viewModel: AuthViewModel(authUseCase: MockAuthUseCase(), authTokenRepository: MockAuthTokenRepository())
     )
 }

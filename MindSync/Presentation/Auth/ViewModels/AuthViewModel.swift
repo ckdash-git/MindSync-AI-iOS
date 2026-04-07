@@ -20,26 +20,42 @@ final class AuthViewModel: ObservableObject {
     @Published var showResetAlert = false
 
     @Published private(set) var currentUser: AppUser?
+
+    /// `true` only when a valid backend JWT exists in Keychain.
+    /// NOT driven by Firebase session state.
     @Published private(set) var isAuthenticated = false
 
     // MARK: - Dependencies
 
     private let authUseCase: AuthUseCaseProtocol
+    private let authTokenRepository: AuthTokenRepositoryProtocol
 
     // MARK: - Lifecycle
 
-    init(authUseCase: AuthUseCaseProtocol) {
+    init(authUseCase: AuthUseCaseProtocol, authTokenRepository: AuthTokenRepositoryProtocol) {
         self.authUseCase = authUseCase
+        self.authTokenRepository = authTokenRepository
         self.currentUser = authUseCase.currentUser
-        self.isAuthenticated = authUseCase.currentUser != nil
+        // Auth state is based on JWT presence — not on Firebase session.
+        self.isAuthenticated = authTokenRepository.hasAccessToken()
     }
 
     // MARK: - Auth State Listener
 
+    /// Keeps `currentUser` in sync with Firebase state (display purposes).
+    /// Also watches for backend 401 → forces logout.
+    /// `isAuthenticated` is managed directly by signIn/signOut actions and the 401 trap.
     func listenToAuthState() async {
+        // Concurrent task: handle backend session expiry (401 from any protected endpoint).
+        Task {
+            for await _ in NotificationCenter.default.notifications(named: .backendSessionExpired) {
+                forceSignOut()
+            }
+        }
+
+        // Main loop: keep currentUser display info up to date from Firebase.
         for await user in authUseCase.authStateChanges() {
-            self.currentUser = user
-            self.isAuthenticated = user != nil
+            currentUser = user
         }
     }
 
@@ -54,8 +70,8 @@ final class AuthViewModel: ObservableObject {
 
             do {
                 let user = try await authUseCase.signIn(email: email.trimmed, password: password)
-                self.currentUser = user
-                self.isAuthenticated = true
+                currentUser = user
+                isAuthenticated = true
                 clearFields()
                 logInfo("Sign-in successful for user \(user.id)")
             } catch {
@@ -79,8 +95,8 @@ final class AuthViewModel: ObservableObject {
                     password: password,
                     displayName: fullName.trimmed
                 )
-                self.currentUser = user
-                self.isAuthenticated = true
+                currentUser = user
+                isAuthenticated = true
                 clearFields()
                 logInfo("Sign-up successful for user \(user.id)")
             } catch {
@@ -122,8 +138,8 @@ final class AuthViewModel: ObservableObject {
 
             do {
                 let user = try await authUseCase.signInWithGoogle()
-                self.currentUser = user
-                self.isAuthenticated = true
+                currentUser = user
+                isAuthenticated = true
                 clearFields()
                 logInfo("Google sign-in successful for user \(user.id)")
             } catch {
@@ -145,8 +161,8 @@ final class AuthViewModel: ObservableObject {
 
             do {
                 let user = try await authUseCase.signInWithGitHub()
-                self.currentUser = user
-                self.isAuthenticated = true
+                currentUser = user
+                isAuthenticated = true
                 clearFields()
                 logInfo("GitHub sign-in successful for user \(user.id)")
             } catch {
@@ -164,12 +180,24 @@ final class AuthViewModel: ObservableObject {
     func signOut() {
         do {
             try authUseCase.signOut()
-            self.currentUser = nil
-            self.isAuthenticated = false
+            currentUser = nil
+            isAuthenticated = false
             logInfo("User signed out")
         } catch {
             presentError(error)
         }
+    }
+
+    // MARK: - Session Expiry (401)
+
+    /// Called when the backend returns 401 on a protected endpoint.
+    /// Clears all auth state and redirects to the login screen.
+    private func forceSignOut() {
+        logWarning("Backend session expired — forcing logout")
+        try? authUseCase.signOut()
+        currentUser = nil
+        isAuthenticated = false
+        presentError("Session expired. Please sign in again.")
     }
 
     // MARK: - Validation

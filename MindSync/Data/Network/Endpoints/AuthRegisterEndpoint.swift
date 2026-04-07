@@ -9,7 +9,7 @@ struct AuthRegisterEndpoint: APIEndpoint {
 
     private let requestBody: AuthRequestDTO
 
-    init(email: String, password: String) {
-        self.requestBody = AuthRequestDTO(email: email, password: password)
+    init(email: String, password: String, displayName: String) {
+        self.requestBody = AuthRequestDTO(email: email, password: password, displayName: displayName)
     }
 }

@@ -100,6 +100,6 @@ struct SignupView: View {
 #Preview {
     SignupView(
         showSignup: .constant(true),
-        viewModel: AuthViewModel(authUseCase: MockAuthUseCase())
+        viewModel: AuthViewModel(authUseCase: MockAuthUseCase(), authTokenRepository: MockAuthTokenRepository())
     )
 }

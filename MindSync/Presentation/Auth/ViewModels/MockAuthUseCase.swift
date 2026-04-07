@@ -29,4 +29,16 @@ final class MockAuthUseCase: AuthUseCaseProtocol {
         AsyncStream { $0.finish() }
     }
 }
+
+/// In-memory no-op token repository used only in SwiftUI previews.
+final class MockAuthTokenRepository: AuthTokenRepositoryProtocol {
+    private var token: String?
+    func saveAccessToken(_ t: String) throws { token = t }
+    func getAccessToken() throws -> String {
+        guard let t = token else { throw AppError.unauthorized }
+        return t
+    }
+    func deleteAccessToken() throws { token = nil }
+    func hasAccessToken() -> Bool { token != nil }
+}
 #endif
