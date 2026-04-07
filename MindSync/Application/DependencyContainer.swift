@@ -22,15 +22,43 @@ final class DependencyContainer {
     lazy var apiKeyRepository: APIKeyRepositoryProtocol = APIKeyRepository(
         keychainManager: keychainManager
     )
+    lazy var authTokenRepository: AuthTokenRepositoryProtocol = AuthTokenRepository(
+        keychainManager: keychainManager
+    )
 
-    lazy var chatRepository: ChatRepositoryProtocol = OpenRouterChatRepository(
-        networkManager: networkManager,
-        apiKeyRepository: apiKeyRepository
+    // MARK: - Network
+    lazy var networkManager: NetworkManagerProtocol = NetworkManager(
+        interceptor: BackendAuthInterceptor(
+            apiKeyRepository: apiKeyRepository,
+            authTokenRepository: authTokenRepository
+        )
+    )
+
+    // MARK: - Repositories
+    lazy var chatRepository: ChatRepositoryProtocol = BackendChatRepository(
+        networkManager: networkManager
+    )
+
+    lazy var explainRepository: ExplainRepositoryProtocol = ExplainRepository(
+        networkManager: networkManager
+    )
+
+    lazy var sessionSummaryRepository: SessionSummaryRepositoryProtocol = SessionSummaryRepository(
+        networkManager: networkManager
     )
 
     // MARK: - Use Cases
     lazy var manageAPIKeyUseCase: ManageAPIKeyUseCaseProtocol = ManageAPIKeyUseCase(
-        apiKeyRepository: apiKeyRepository
+        apiKeyRepository: apiKeyRepository,
+        networkManager: networkManager
+    )
+
+    lazy var explainUseCase: ExplainUseCaseProtocol = ExplainUseCase(
+        explainRepository: explainRepository
+    )
+
+    lazy var sessionSummaryUseCase: SessionSummaryUseCaseProtocol = SessionSummaryUseCase(
+        summaryRepository: sessionSummaryRepository
     )
 
     // MARK: - Storage

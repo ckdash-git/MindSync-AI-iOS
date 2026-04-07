@@ -34,7 +34,7 @@ enum AppError: LocalizedError, Equatable {
         case .timeout:
             return "The request timed out. Please try again."
         case .unauthorized:
-            return "Authentication failed. Please check your API key."
+            return "Session expired. Please log in again."
         case .serverError:
             return "A server error occurred. Please try again later."
         case .missingAPIKey(let provider):

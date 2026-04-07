@@ -4,8 +4,8 @@ import CoreGraphics
 enum AppConstants {
 
     enum API {
+        static let backendBaseURL = "https://ai.api.optionallabs.com"
         static let openRouterBaseURL = "https://openrouter.ai/api/v1"
-        static let openRouterAuthURL = "https://openrouter.ai/api/v1/auth/key"
 
         static let defaultTimeoutInterval: TimeInterval = 60
         static let streamingTimeoutInterval: TimeInterval = 180
@@ -16,6 +16,7 @@ enum AppConstants {
     enum Keychain {
         static let service = "com.mindsync.keychain"
         static let openRouterKeyAccount = "openrouter_api_key"
+        static let jwtAccessTokenAccount = "jwt_access_token"
     }
 
     enum Chat {
