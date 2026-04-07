@@ -26,7 +26,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
     func signIn(email: String, password: String) async throws -> AppUser {
         do {
             let result = try await auth.signIn(withEmail: email, password: password)
-            logInfo("User signed in: \(result.user.uid)")
+            logInfo("User signed in successfully")
             return result.user.toAppUser()
         } catch {
             logError("Sign-in failed: \(error.localizedDescription)")
@@ -49,7 +49,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
             try await result.user.reload()
 
             let user = self.auth.currentUser ?? result.user
-            logInfo("User signed up: \(user.uid)")
+            logInfo("User signed up successfully")
             return user.toAppUser()
         } catch {
             logError("Sign-up failed: \(error.localizedDescription)")
@@ -65,13 +65,12 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
             throw AppError.custom(message: "Firebase client ID not found. Ensure GoogleService-Info.plist is configured.")
         }
 
-        // 2. Get the presenting view controller on the main thread
-        let rootViewController = try await MainActor.run {
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let rootVC = windowScene.windows.first?.rootViewController else {
+        // 2. Get the top-most presenting view controller on the main thread
+        let presentingVC = try await MainActor.run {
+            guard let viewController = UIApplication.shared.activePresentingViewController else {
                 throw AppError.custom(message: "Unable to find root view controller for Google Sign-In.")
             }
-            return rootVC
+            return viewController
         }
 
         // 3. Configure Google Sign-In
@@ -80,7 +79,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
 
         // 4. Present the Google Sign-In flow
         do {
-            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presentingVC)
 
             guard let idToken = result.user.idToken?.tokenString else {
                 throw AppError.custom(message: "Failed to retrieve Google ID token.")
@@ -96,7 +95,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
 
             // 6. Sign in to Firebase with the Google credential
             let authResult = try await auth.signIn(with: credential)
-            logInfo("Google sign-in successful: \(authResult.user.uid)")
+            logInfo("Google sign-in successful")
             return authResult.user.toAppUser()
         } catch {
             // User cancelled the Google Sign-In flow
@@ -117,13 +116,13 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
         do {
             let credential = try await provider.credential(with: nil)
             let authResult = try await auth.signIn(with: credential)
-            logInfo("GitHub sign-in successful: \(authResult.user.uid)")
+            logInfo("GitHub sign-in successful")
             return authResult.user.toAppUser()
         } catch {
             let nsError = error as NSError
-            // User cancelled the auth flow
-            if nsError.code == AuthErrorCode.webContextCancelled.rawValue ||
-               nsError.code == AuthErrorCode.webContextAlreadyPresented.rawValue {
+            // Only map genuine user cancellation — not presentation conflicts
+            if nsError.domain == AuthErrorDomain,
+               nsError.code == AuthErrorCode.webContextCancelled.rawValue {
                 throw AppError.userCancelled
             }
             logError("GitHub sign-in failed: \(error.localizedDescription)")
@@ -169,6 +168,29 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
                 authInstance.removeStateDidChangeListener(handle)
             }
         }
+    }
+}
+
+// MARK: - UIApplication Extension
+
+extension UIApplication {
+    /// Finds the foreground-active window scene's key window and walks
+    /// the presentedViewController chain to return the top-most VC.
+    @MainActor
+    var activePresentingViewController: UIViewController? {
+        let activeScene = connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+
+        guard let keyWindow = activeScene?.windows.first(where: \.isKeyWindow) ?? activeScene?.windows.first else {
+            return nil
+        }
+
+        var topVC = keyWindow.rootViewController
+        while let presented = topVC?.presentedViewController {
+            topVC = presented
+        }
+        return topVC
     }
 }
 

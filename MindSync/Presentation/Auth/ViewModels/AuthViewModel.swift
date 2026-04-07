@@ -25,6 +25,7 @@ final class AuthViewModel: ObservableObject {
     // MARK: - Dependencies
 
     private let authUseCase: AuthUseCaseProtocol
+    private var authStateTask: Task<Void, Never>?
 
     // MARK: - Lifecycle
 
@@ -37,10 +38,18 @@ final class AuthViewModel: ObservableObject {
     // MARK: - Auth State Listener
 
     func listenToAuthState() async {
-        for await user in authUseCase.authStateChanges() {
-            self.currentUser = user
-            self.isAuthenticated = user != nil
+        // Prevent duplicate listeners
+        guard authStateTask == nil || authStateTask?.isCancelled == true else { return }
+
+        authStateTask = Task {
+            for await user in authUseCase.authStateChanges() {
+                guard !Task.isCancelled else { break }
+                self.currentUser = user
+                self.isAuthenticated = user != nil
+            }
         }
+
+        await authStateTask?.value
     }
 
     // MARK: - Sign In
