@@ -6,13 +6,32 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2FD481832F84100B00E9F269 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 2FD481822F84100B00E9F269 /* FirebaseAuth */; };
+		A1B2C3D42F84200000000001 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D32F84200000000001 /* GoogleSignIn */; };
+		A1B2C3D62F84200000000002 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D52F84200000000002 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		1B2226372F7FF7EC001F39C0 /* MindSync.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MindSync.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2FD4824D2F84180100E9F269 /* Exceptions for "MindSync" folder in "MindSync" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1B2226362F7FF7EC001F39C0 /* MindSync */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1B2226392F7FF7EC001F39C0 /* MindSync */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2FD4824D2F84180100E9F269 /* Exceptions for "MindSync" folder in "MindSync" target */,
+			);
 			path = MindSync;
 			sourceTree = "<group>";
 		};
@@ -28,6 +47,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2FD481832F84100B00E9F269 /* FirebaseAuth in Frameworks */,
+				A1B2C3D42F84200000000001 /* GoogleSignIn in Frameworks */,
+				A1B2C3D62F84200000000002 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,6 +94,9 @@
 			);
 			name = MindSync;
 			packageProductDependencies = (
+				2FD481822F84100B00E9F269 /* FirebaseAuth */,
+				A1B2C3D32F84200000000001 /* GoogleSignIn */,
+				A1B2C3D52F84200000000002 /* GoogleSignInSwift */,
 			);
 			productName = MindSync;
 			productReference = 1B2226372F7FF7EC001F39C0 /* MindSync.app */;
@@ -101,6 +126,10 @@
 			);
 			mainGroup = 1B22262E2F7FF7EC001F39C0;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2FD481812F84100A00E9F269 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				A1B2C3D22F84200000000000 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1B2226382F7FF7EC001F39C0 /* Products */;
 			projectDirPath = "";
@@ -263,6 +292,7 @@
 				DEVELOPMENT_TEAM = 98UZF3WN7H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MindSync/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MindSync uses the microphone to transcribe your voice into chat messages.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "MindSync uses speech recognition to convert your voice to text.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -298,6 +328,7 @@
 				DEVELOPMENT_TEAM = 98UZF3WN7H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MindSync/Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MindSync uses the microphone to transcribe your voice into chat messages.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "MindSync uses speech recognition to convert your voice to text.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -345,6 +376,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2FD481812F84100A00E9F269 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.11.0;
+			};
+		};
+		A1B2C3D22F84200000000000 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2FD481822F84100B00E9F269 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2FD481812F84100A00E9F269 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		A1B2C3D32F84200000000001 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D22F84200000000000 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A1B2C3D52F84200000000002 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D22F84200000000000 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1B22262F2F7FF7EC001F39C0 /* Project object */;
 }
