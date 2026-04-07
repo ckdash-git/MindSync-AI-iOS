@@ -11,6 +11,13 @@ enum AppConstants {
         static let streamingTimeoutInterval: TimeInterval = 180
 
         static let defaultMaxTokens = 4096
+
+        enum Auth {
+            static let basePath = "/api/v1/auth"
+            static let login = basePath + "/login"
+            static let register = basePath + "/register"
+            static let socialLogin = basePath + "/social-login"
+        }
     }
 
     enum Keychain {

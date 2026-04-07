@@ -39,7 +39,7 @@ final class BackendAuthInterceptor: RequestInterceptorProtocol {
         let path = request.url?.path ?? ""
 
         // Auth endpoints carry their own credentials — skip injection.
-        guard !path.hasPrefix("/api/v1/auth/") else {
+        guard !path.hasPrefix(AppConstants.API.Auth.basePath) else {
             logDebug("[\(request.httpMethod ?? "?")] \(path) [auth endpoint — no injection]")
             return request
         }
@@ -65,7 +65,7 @@ final class BackendAuthInterceptor: RequestInterceptorProtocol {
 
         // Auth endpoints return 401 for wrong credentials — that is expected behaviour,
         // not a session expiry. Let the calling code handle those errors.
-        guard !path.hasPrefix("/api/v1/auth/") else { return }
+        guard !path.hasPrefix(AppConstants.API.Auth.basePath) else { return }
 
         logDebug("HTTP \(response.statusCode) ← \(path)")
 
