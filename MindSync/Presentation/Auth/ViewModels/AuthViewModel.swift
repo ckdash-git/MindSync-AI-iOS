@@ -230,8 +230,8 @@ final class AuthViewModel: ObservableObject {
             return false
         }
         guard validateSignInFields() else { return false }
-        if password.count < 6 {
-            presentError("Password must be at least 6 characters.")
+        if password.count < 8 {
+            presentError("Password must be at least 8 characters.")
             return false
         }
         return true

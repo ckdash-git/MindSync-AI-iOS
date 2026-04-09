@@ -47,6 +47,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
                 throw AppError.custom(message: "Sign-in failed: server did not return a token.")
             }
             try authTokenRepository.saveAccessToken(tokens.accessToken)
+            try authTokenRepository.saveRefreshToken(tokens.refreshToken)
             logInfo("Backend JWT stored for \(email)")
         } catch let error as AppError {
             // Map 401 from /auth/login to a user-friendly wrong-password message.
@@ -83,6 +84,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
                 throw AppError.custom(message: "Registration failed: server did not return a token.")
             }
             try authTokenRepository.saveAccessToken(tokens.accessToken)
+            try authTokenRepository.saveRefreshToken(tokens.refreshToken)
             logInfo("Backend JWT stored (sign-up) for \(email)")
         } catch let error as AppError {
             if case .requestFailed(let code) = error, code == 409 {
@@ -172,6 +174,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
                 throw AppError.custom(message: "Social login failed: no token returned.")
             }
             try authTokenRepository.saveAccessToken(tokens.accessToken)
+            try authTokenRepository.saveRefreshToken(tokens.refreshToken)
             logInfo("Google sign-in: backend JWT stored for \(authResult.user.uid)")
             return authResult.user.toAppUser()
         } catch {
@@ -217,6 +220,7 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
                 throw AppError.custom(message: "Social login failed: no token returned.")
             }
             try authTokenRepository.saveAccessToken(tokens.accessToken)
+            try authTokenRepository.saveRefreshToken(tokens.refreshToken)
             logInfo("GitHub sign-in: backend JWT stored for \(authResult.user.uid)")
             return authResult.user.toAppUser()
         } catch {
@@ -245,8 +249,9 @@ final class FirebaseAuthRepository: AuthRepositoryProtocol {
 
     /// Clears the backend JWT and signs out of all Firebase/social sessions.
     func signOut() throws {
-        // Clear backend JWT — this is the primary auth token.
+        // Clear backend JWT and refresh token — these are the primary auth tokens.
         try? authTokenRepository.deleteAccessToken()
+        try? authTokenRepository.deleteRefreshToken()
         // Sign out from social providers.
         GIDSignIn.sharedInstance.signOut()
         // Sign out from Firebase.
