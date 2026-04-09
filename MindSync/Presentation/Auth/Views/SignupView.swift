@@ -97,9 +97,11 @@ struct SignupView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     SignupView(
         showSignup: .constant(true),
         viewModel: AuthViewModel(authUseCase: MockAuthUseCase(), authTokenRepository: MockAuthTokenRepository())
     )
 }
+#endif

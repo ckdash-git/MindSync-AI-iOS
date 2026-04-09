@@ -1,8 +1,8 @@
 import Foundation
+import UIKit
 import FirebaseAuth
 import FirebaseCore
 import GoogleSignIn
-import CryptoKit
 
 /// Firebase-backed implementation of `AuthRepositoryProtocol`.
 ///
