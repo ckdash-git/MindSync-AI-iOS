@@ -34,6 +34,9 @@ final class NetworkManager: NetworkManagerProtocol {
         try await interceptor.intercept(response: httpResponse, data: data)
 
         guard (200..<300).contains(httpResponse.statusCode) else {
+            if let body = String(data: data, encoding: .utf8) {
+                logDebug("HTTP \(httpResponse.statusCode) error — \(httpResponse.url?.path ?? ""): \(body)")
+            }
             throw NetworkError.map(from: AppError.unknown, statusCode: httpResponse.statusCode)
         }
 

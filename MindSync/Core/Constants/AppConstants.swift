@@ -16,6 +16,7 @@ enum AppConstants {
             static let basePath = "/api/v1/auth"
             static let login = basePath + "/login"
             static let register = basePath + "/register"
+            static let refresh = basePath + "/refresh"
             static let socialLogin = basePath + "/social-login"
         }
     }
@@ -24,6 +25,7 @@ enum AppConstants {
         static let service = "com.mindsync.keychain"
         static let openRouterKeyAccount = "openrouter_api_key"
         static let jwtAccessTokenAccount = "jwt_access_token"
+        static let jwtRefreshTokenAccount = "jwt_refresh_token"
     }
 
     enum Chat {

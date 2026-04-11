@@ -18,6 +18,8 @@ struct AuthView: View {
     }
 }
 
+#if DEBUG
 #Preview {
-    AuthView(viewModel: AuthViewModel(authUseCase: MockAuthUseCase()))
+    AuthView(viewModel: AuthViewModel(authUseCase: MockAuthUseCase(), authTokenRepository: MockAuthTokenRepository()))
 }
+#endif

@@ -36,13 +36,22 @@ final class MockAuthUseCase: AuthUseCaseProtocol {
 
 /// In-memory no-op token repository used only in SwiftUI previews.
 final class MockAuthTokenRepository: AuthTokenRepositoryProtocol {
-    private var token: String?
-    func saveAccessToken(_ t: String) throws { token = t }
+    private var accessToken: String?
+    private var refreshToken: String?
+
+    func saveAccessToken(_ t: String) throws { accessToken = t }
     func getAccessToken() throws -> String {
-        guard let t = token else { throw AppError.unauthorized }
+        guard let t = accessToken else { throw AppError.unauthorized }
         return t
     }
-    func deleteAccessToken() throws { token = nil }
-    func hasAccessToken() -> Bool { token != nil }
+    func deleteAccessToken() throws { accessToken = nil }
+    func hasAccessToken() -> Bool { accessToken != nil }
+
+    func saveRefreshToken(_ t: String) throws { refreshToken = t }
+    func getRefreshToken() throws -> String {
+        guard let t = refreshToken else { throw AppError.unauthorized }
+        return t
+    }
+    func deleteRefreshToken() throws { refreshToken = nil }
 }
 #endif
